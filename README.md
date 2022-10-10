@@ -1,2 +1,2 @@
 # eupnea-os
-A Fedora based distro, specifcally for Chromebooks
+A Fedora based distro, optimized for Chromebooks
