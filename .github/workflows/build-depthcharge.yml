@@ -21,7 +21,7 @@ jobs:
         run: sudo apt-get install cgpt vboot-kernel-utils dnf curl -y
 
       - name: Adding yum repos for dnf
-        run: sudo cp configs/yum.repos.d/ /etc/yum.repos.d/
+        run: sudo cp -r configs/yum.repos.d/ /etc/yum.repos.d/
 
       - name: Cloning repositories
         run: |
