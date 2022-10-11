@@ -238,8 +238,7 @@ if __name__ == "__main__":
         print_error("Install dnf and add yum repos!")
         exit(1)
 
-    # prepare container
-    mkdir("/tmp/eupnea-build", create_parents=True)
+    # prepare mount
     mkdir("/mnt/eupnea", create_parents=True)
 
     image_props = prepare_image()

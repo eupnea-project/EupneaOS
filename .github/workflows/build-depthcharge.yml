@@ -29,6 +29,9 @@ jobs:
           git clone --depth=1 https://github.com/eupnea-linux/audio-scripts
           git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware
 
+      - name: Create temp directory
+        run: mkdir /tmp/eupnea-build/
+
       - name: Downloading kernel, modules, headers
         run: |
           curl -L "https://github.com/eupnea-linux/kernel/releases/latest/download/bzImage" -o /tmp/eupnea-build/bzImage
