@@ -81,17 +81,12 @@ def flash_kernel(kernel_part: str) -> None:
 def bootstrap_rootfs(root_partuuid) -> None:
     bash("dnf -y --releasever=36 --installroot=/mnt/eupnea groupinstall core")
 
-    # Copy resolv.conf from host to chroot
-    mkdir("/mnt/eupnea/run/systemd/resolve", create_parents=True)
+    # Create a temporary resolv.conf for internet inside the chroot
+    mkdir("/mnt/eupnea/run/systemd/resolve", create_parents=True)  # dir doesnt exist coz systemd didnt run
+    cpfile("/etc/resolv.conf", "/mnt/eupnea/run/systemd/resolve/stub-resolv.conf")  # copy hosts resolv.conf to chroot
 
-    # A temporary resolv.conf for internet in the chroot
-    cpfile("/etc/resolv.conf", "/mnt/eupnea/run/systemd/resolve/stub-resolv.conf")
-
-    # this is for testing
-    print(bash("cat /mnt/eupnea/etc/resolv.conf"))
-    exit(1)
-
-    chroot("dnf update --releasever=36 -y")  # update repos list
+    # TODO: Replace generic repos with own eupnea repos
+    chroot("sudo dnf install  --releasever=36 --allowerasing -y generic-logos generic-release generic-release-common")
     chroot("dnf group install -y 'Common NetworkManager Submodules'")
     chroot("dnf group install -y 'Hardware Support'")
     chroot("dnf install -y linux-firmware")
@@ -194,11 +189,6 @@ def bootstrap_rootfs(root_partuuid) -> None:
     print_status("Copying google firmware")
     rmdir("/mnt/eupnea/lib/firmware")
     cpdir("firmware", "/mnt/eupnea/lib/firmware")
-
-
-def replace_licensed_files() -> None:
-    # TODO: Replace generic repos with own eupnea repos
-    chroot("sudo dnf install generic-logos generic-release generic-release-common --allowerasing")
 
 
 def customize_kde() -> None:
