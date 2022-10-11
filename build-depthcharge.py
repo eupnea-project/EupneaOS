@@ -29,7 +29,7 @@ def process_args():
 def prepare_image() -> Tuple[str, str]:
     print_status("Preparing image")
 
-    bash(f"fallocate -l 10G eupnea-depthcharge.bin")
+    bash(f"fallocate -l 8G eupnea-depthcharge.bin")
     print_status("Mounting empty image")
     img_mnt = bash("losetup -f --show eupnea-depthcharge.bin")
     if img_mnt == "":
@@ -193,6 +193,13 @@ def bootstrap_rootfs(root_partuuid) -> None:
 
 def customize_kde() -> None:
     pass
+
+
+def compress_image() -> None:
+    # TODO: Compress image
+
+    # compress image
+    bash("tar -cv -I 'xz -9 -T0' -f ./eupnea-depthcharge.bin.tar.xz ./eupnea-depthcharge-compressed.bin")
 
 
 def chroot(command: str) -> None:
