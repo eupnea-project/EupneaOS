@@ -47,6 +47,4 @@ jobs:
           name: stable-kernel
           retention-days: 1
           path: |
-            bzImage
-            modules.tar.xz
-            headers.tar.xz
+            eupnea-depthcharge.bin

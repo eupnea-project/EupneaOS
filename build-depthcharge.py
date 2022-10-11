@@ -29,9 +29,9 @@ def process_args():
 def prepare_image() -> Tuple[str, str]:
     print_status("Preparing image")
 
-    bash(f"fallocate -l 10G eupnea-depthcharge.img")
+    bash(f"fallocate -l 10G eupnea-depthcharge.bin")
     print_status("Mounting empty image")
-    img_mnt = bash("losetup -f --show eupnea-depthcharge.img")
+    img_mnt = bash("losetup -f --show eupnea-depthcharge.bin")
     if img_mnt == "":
         print_error("Failed to mount image")
         exit(1)
@@ -228,8 +228,6 @@ if __name__ == "__main__":
     if args.mainline:
         print_warning("Using mainline kernel")
         kernel_type = "mainline"
-    if args.local_path:
-        print_warning("Using local files")
     if args.verbose:
         print_warning("Verbosity increased")
 
