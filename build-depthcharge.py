@@ -194,7 +194,7 @@ def customize_kde() -> None:
 
 
 def chroot(command: str) -> None:
-    if verbose:
+    if args.verbose:
         bash(f'chroot /mnt/eupnea /bin/sh -c "{command}"')
     else:
         bash(f'chroot /mnt/eupnea /bin/sh -c "{command}" 2>/dev/null 1>/dev/null')  # supress all output
