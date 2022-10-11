@@ -23,6 +23,9 @@ jobs:
       - name: Adding yum repos for dnf
         run: sudo cp -r configs/yum.repos.d/ /etc/yum.repos.d/
 
+      - name: Adding gpg keys repos for dnf
+        run: sudo cp -r configs/rpm-gpg /etc/pki/
+
       - name: Cloning repositories
         run: |
           git clone --depth=1 https://github.com/eupnea-linux/postinstall-scripts
