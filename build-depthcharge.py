@@ -247,7 +247,6 @@ if __name__ == "__main__":
 
     image_props = prepare_image()
     bootstrap_rootfs(image_props[0])
-    replace_licensed_files()
     customize_kde()
 
     # Unmount image
