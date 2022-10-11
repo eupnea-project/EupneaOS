@@ -80,6 +80,7 @@ def flash_kernel(kernel_part: str) -> None:
 # Make a bootable rootfs
 def bootstrap_rootfs(root_partuuid) -> None:
     bash("dnf -y --releasever=36 --installroot=/mnt/eupnea groupinstall core")
+    chroot("dnf update -y")  # update repos list
     chroot("dnf group install -y 'Common NetworkManager Submodules'")
     chroot("dnf group install -y 'Hardware Support'")
     chroot("dnf install -y linux-firmware")
