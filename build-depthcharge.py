@@ -88,7 +88,8 @@ def bootstrap_rootfs(root_partuuid) -> None:
     cpfile("/etc/resolv.conf", "/mnt/eupnea/run/systemd/resolve/stub-resolv.conf")
 
     # this is for testing
-    bash("cat /mnt/eupnea/etc/resolv.conf")
+    print(bash("cat /mnt/eupnea/etc/resolv.conf"))
+    exit(1)
 
     chroot("dnf update --releasever=36 -y")  # update repos list
     chroot("dnf group install -y 'Common NetworkManager Submodules'")
