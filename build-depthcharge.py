@@ -79,8 +79,8 @@ def flash_kernel(kernel_part: str) -> None:
 
 # Make a bootable rootfs
 def bootstrap_rootfs(root_partuuid) -> None:
-    bash("dnf --releasever=36 --installroot=/mnt/eupnea groupinstall 'Common NetworkManager Submodules "
-         "Hardware Support' -y")
+    bash("dnf -y --releasever=36 --installroot=/mnt/eupnea groupinstall core")
+    chroot("dnf group install -y 'Common NetworkManager Submodules' 'Hardware Support'")  # install network and hardware
     chroot("dnf install -y linux-firmware")
 
     # Add RPMFusion repos
@@ -174,6 +174,8 @@ def bootstrap_rootfs(root_partuuid) -> None:
     chroot("useradd --create-home --shell /bin/bash temp-user")  # add user
     chroot("usermod -aG wheel temp-user")  # add user to wheel
     # set up automatic login on boot for temp-user
+    with open("/mnt/eupnea/etc/sddm.conf", "a") as sddm_conf:
+        sddm_conf.write("\n[Autologin]\nUser=temp-user\nSession=plasma.desktop\n")
 
     # Copy chromebook firmware
     print_status("Copying google firmware")
