@@ -198,7 +198,7 @@ def customize_kde() -> None:
 def compress_image() -> None:
     # TODO: Shrink image
     # compress image
-    bash("tar -cv -I 'xz -9 -T0' -f ./eupnea-depthcharge.bin.tar.xz ./eupnea-depthcharge-cut.bin")
+    bash("tar -cv -I 'xz -9 -T0' -f ./eupnea-depthcharge.bin.tar.xz ./eupnea-depthcharge.bin")
 
 
 def chroot(command: str) -> None:
