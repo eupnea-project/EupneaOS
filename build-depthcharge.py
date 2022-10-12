@@ -206,7 +206,7 @@ def compress_image(img_mnt: str) -> None:
     actual_fs_in_bytes = block_count * 4096
     # the kernel part is always the same size -> sector amount: 131072 * 512 => 67108864 bytes
     actual_fs_in_bytes += 67108864
-    actual_fs_in_bytes += 100000  # add 100kb for linux to be able to boot
+    actual_fs_in_bytes += 102400  # add 100kb for linux to be able to boot
     bash(f"truncate --size={actual_fs_in_bytes} ./eupnea-depthcharge.bin")
 
     # compress image
