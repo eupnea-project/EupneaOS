@@ -131,6 +131,7 @@ def configure_rootfs() -> None:
     print_status("Configuring liveuser")
     chroot("useradd --create-home --shell /bin/bash liveuser")  # add user
     chroot("usermod -aG wheel liveuser")  # add user to wheel
+    chroot(f'echo "liveuser:" | chpasswd')  # set password to blank
     # set up automatic login on boot for temp-user
     with open("/mnt/eupnea/etc/sddm.conf", "a") as sddm_conf:
         sddm_conf.write("\n[Autologin]\nUser=liveuser\nSession=plasma.desktop\n")
