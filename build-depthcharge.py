@@ -201,6 +201,8 @@ def customize_kde() -> None:
 
 
 def compress_image(img_mnt: str) -> None:
+    print_status("Shrinking image")
+
     # Shrink image to actual size
     bash(f"resize2fs -M {img_mnt}p2")
     block_count = int(bash(f"dumpe2fs -h {img_mnt}p2 | grep 'Block count:'")[12:].split()[0])
