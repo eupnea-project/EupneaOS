@@ -50,6 +50,9 @@ jobs:
           name: eupnea-uefi
           path: /tmp/artifacts/
 
+      - name: Testing
+        run: sudo ls -a /tmp/artifacts/
+
       - name: Publishing new release
         uses: softprops/action-gh-release@v1
         with:
