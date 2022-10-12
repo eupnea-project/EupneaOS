@@ -86,7 +86,7 @@ def bootstrap_rootfs(root_partuuid) -> None:
     cpfile("/etc/resolv.conf", "/mnt/eupnea/run/systemd/resolve/stub-resolv.conf")  # copy hosts resolv.conf to chroot
 
     # TODO: Replace generic repos with own eupnea repos
-    chroot("sudo dnf install  --releasever=36 --allowerasing -y generic-logos generic-release generic-release-common")
+    chroot("dnf install  --releasever=36 --allowerasing -y generic-logos generic-release generic-release-common")
     chroot("dnf group install -y 'Common NetworkManager Submodules'")
     chroot("dnf group install -y 'Hardware Support'")
     chroot("dnf install -y linux-firmware")
@@ -202,7 +202,7 @@ def customize_kde() -> None:
 def compress_image(img_mnt: str) -> None:
     # Shrink image to actual size
     bash(f"resize2fs -M {img_mnt}p2")
-    block_count = int(bash(f"sudo dumpe2fs -h {img_mnt}p2 | grep 'Block count:'")[1][12:].strip())
+    block_count = int(bash(f"dumpe2fs -h {img_mnt}p2 | grep 'Block count:'")[12:].split()[0])
     actual_fs_in_bytes = block_count * 4096
     # the kernel part is always the same size -> sector amount: 131072 * 512 => 67108864 bytes
     actual_fs_in_bytes += 67108864
