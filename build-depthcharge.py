@@ -210,8 +210,11 @@ def compress_image(img_mnt: str) -> None:
     actual_fs_in_bytes += 102400  # add 100kb for linux to be able to boot
     bash(f"truncate --size={actual_fs_in_bytes} ./eupnea-depthcharge.bin")
 
-    # compress image
+    # compress image to tar. Tars are smaller but the native file manager on chromeos cant uncompress them
     bash("tar -cv -I 'xz -9 -T0' -f ./eupnea-depthcharge.bin.tar.xz ./eupnea-depthcharge.bin")
+
+    # Rars are bigger but natively supported by the ChromeOS file manager
+    bash("rar a eupnea-depthcharge.bin.rar -m5 eupnea-depthcharge.bin")
 
 
 def chroot(command: str) -> None:

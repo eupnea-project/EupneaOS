@@ -38,7 +38,7 @@ jobs:
         with:
           workflow: build-depthcharge.yml
           workflow_conclusion: completed
-          name: eupnea-depthcharge.bin.tar.xz
+          name: eupnea-depthcharge
           path: /tmp/artifacts/
 
       - name: Download UEFI artifact
@@ -47,7 +47,7 @@ jobs:
         with:
           workflow: build-uefi.yml
           workflow_conclusion: completed
-          name: eupnea-uefi.bin.tar.xz
+          name: eupnea-uefi
           path: /tmp/artifacts/
 
       - name: Publishing new release
@@ -60,5 +60,4 @@ jobs:
             This is a development build of Eupnea OS. Highly unstable!
             Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
           files: |
-            /tmp/artifacts/eupnea-depthcharge.bin.tar.xz
-            /tmp/artifacts/eupnea-uefi.bin.tar.xz
+            /tmp/artifacts/eupnea-*

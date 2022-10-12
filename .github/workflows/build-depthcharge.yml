@@ -44,10 +44,11 @@ jobs:
       - name: Building depthcharge image
         run: python3 build-depthcharge.py -v
 
-      - name: Uploading compressed image as artifact
+      - name: Uploading compressed images as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: eupnea-depthcharge.bin.tar.xz
-          retention-days: 1 # no need to keep this for long, as it gets uploaded to releases immediately
+          name: eupnea-depthcharge
+          retention-days: 1 # no need to keep the packages for long, as they get uploaded to releases immediately
           path: |
             eupnea-depthcharge.bin.tar.xz
+            eupnea-depthcharge.bin.rar
