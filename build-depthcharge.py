@@ -95,32 +95,17 @@ def bootstrap_rootfs(root_partuuid) -> None:
     chroot(f"dnf install -y https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-36.noarch.rpm")
     chroot(f"dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-36.noarch.rpm")
 
-    # Install KDE
-    chroot("dnf group install -y 'KDE Plasma Workspaces'")
-    # Set system to boot to gui
-    chroot("systemctl set-default graphical.target")
-    # Add chromebook keyboard layout. Needs to be done after install Xorg
-    print_status("Backing up default keymap and setting Chromebook layout")
-    cpfile("/mnt/eupnea/usr/share/X11/xkb/symbols/pc", "/mnt/eupnea/usr/share/X11/xkb/symbols/pc.default")
-    cpfile("configs/xkb/xkb.chromebook", "/mnt/eupnea/usr/share/X11/xkb/symbols/pc")
 
-    # TODO: Fix zram
-    chroot("dnf remove zram-generator-defaults -y")  # remove zram as it fails for some reason
-    chroot("systemctl disable systemd-zram-setup@zram0.service")  # disable zram service
-
-    # The default fstab file has the wrong PARTUUID -> system boots in emergency mode if not fixed
-    # with open("configs/fstab.txt", "r") as f:
-    #     fstab = f.read()
-    # fstab = fstab.replace("insert_partuuid", root_partuuid)
-    # with open("/mnt/eupnea/etc/fstab", "w") as f:
-    #     f.write(fstab)
-
+def configure_rootfs() -> None:
     # Extract kernel modules
     print_status("Extracting kernel modules")
     rmdir("/mnt/eupnea/lib/modules")  # remove all old modules
     mkdir("/mnt/eupnea/lib/modules")
     bash(f"tar xpf /tmp/eupnea-build/modules.tar.xz -C /mnt/eupnea/lib/modules/ --checkpoint=.10000")
     print("")  # break line after tar
+
+    # Enable loading modules needed for eupnea
+    cpfile("configs/eupnea-modules.conf", "/mnt/eupnea/etc/modules-load.d/eupnea-modules.conf")
 
     # Extract kernel headers
     print_status("Extracting kernel headers")
@@ -133,9 +118,21 @@ def bootstrap_rootfs(root_partuuid) -> None:
     chroot(f"ln -s /usr/src/linux-headers-{dir_kernel_version}/ "
            f"/lib/modules/{dir_kernel_version}/build")  # use chroot for correct symlink
 
+    # Copy chromebook firmware
+    print_status("Copying google firmware")
+    rmdir("/mnt/eupnea/lib/firmware")
+    cpdir("firmware", "/mnt/eupnea/lib/firmware")
+
     # Set device hostname
     with open("/mnt/eupnea/etc/hostname", "w") as hostname_file:
         hostname_file.write("eupnea-chromebook" + "\n")
+
+    print_status("Configuring liveuser")
+    chroot("useradd --create-home --shell /bin/bash liveuser")  # add user
+    chroot("usermod -aG wheel liveuser")  # add user to wheel
+    # set up automatic login on boot for temp-user
+    with open("/mnt/eupnea/etc/sddm.conf", "a") as sddm_conf:
+        sddm_conf.write("\n[Autologin]\nUser=liveuser\nSession=plasma.desktop\n")
 
     print_status("Copying eupnea scripts and configs")
     # Copy postinstall scripts
@@ -145,19 +142,24 @@ def bootstrap_rootfs(root_partuuid) -> None:
                 continue  # dont copy license, readme and gitignore
             else:
                 cpfile(file.absolute().as_posix(), f"/mnt/eupnea/usr/local/bin/{file.name}")
+
     # copy audio setup script
     cpfile("audio-scripts/setup-audio", "/mnt/eupnea/usr/local/bin/setup-audio")
+
     # copy functions file
     cpfile("functions.py", "/mnt/eupnea/usr/local/bin/functions.py")
     chroot("chmod 755 /usr/local/bin/*")  # make scripts executable in system
+
     # copy configs
     mkdir("/mnt/eupnea/etc/eupnea")
     cpdir("configs", "/mnt/eupnea/etc/eupnea")  # eupnea-builder configs
     cpdir("postinstall-scripts/configs", "/mnt/eupnea/etc/eupnea")  # postinstall configs
     cpdir("audio-scripts/configs", "/mnt/eupnea/etc/eupnea")  # audio configs
-    # copy eupnea settings file for postinstall scripts to read
+
+    # copy preset eupnea settings file for postinstall scripts to read
     cpfile("configs/eupnea.json", "/mnt/eupnea/etc/eupnea.json")
-    # Add postinstall service
+
+    # Add postinstall service hook
     print_status("Adding postinstall service")
     cpfile("configs/postinstall.service", "/mnt/eupnea/etc/systemd/system/postinstall.service")
     chroot("systemctl enable postinstall.service")
@@ -169,34 +171,44 @@ def bootstrap_rootfs(root_partuuid) -> None:
     with open("/mnt/eupnea/etc/systemd/sleep.conf", "a") as conf:
         conf.write("SuspendState=freeze\nHibernateState=freeze\n")
 
-    # Enable loading modules needed for eupnea
-    cpfile("configs/eupnea-modules.conf", "/mnt/eupnea/etc/modules-load.d/eupnea-modules.conf")
-
     # TODO: Fix failing services
     # The services below fail to start, so they are disabled
     # ssh
     rmfile("/mnt/eupnea/etc/systemd/system/multi-user.target.wants/ssh.service")
     rmfile("/mnt/eupnea/etc/systemd/system/sshd.service")
+    # TODO: Fix zram
+    chroot("dnf remove zram-generator-defaults -y")  # remove zram as it fails for some reason
+    chroot("systemctl disable systemd-zram-setup@zram0.service")  # disable zram service
 
-    print_status("Pre-configuring user")
-    chroot("useradd --create-home --shell /bin/bash temp-user")  # add user
-    chroot("usermod -aG wheel temp-user")  # add user to wheel
-    # set up automatic login on boot for temp-user
-    with open("/mnt/eupnea/etc/sddm.conf", "a") as sddm_conf:
-        sddm_conf.write("\n[Autologin]\nUser=temp-user\nSession=plasma.desktop\n")
-
-    # Copy chromebook firmware
-    print_status("Copying google firmware")
-    rmdir("/mnt/eupnea/lib/firmware")
-    cpdir("firmware", "/mnt/eupnea/lib/firmware")
+    # The default fstab file has the wrong PARTUUID -> system boots in emergency mode if not fixed
+    # with open("configs/fstab.txt", "r") as f:
+    #     fstab = f.read()
+    # fstab = fstab.replace("insert_partuuid", root_partuuid)
+    # with open("/mnt/eupnea/etc/fstab", "w") as f:
+    #     f.write(fstab)
 
 
 def customize_kde() -> None:
-    pass
+    # Install KDE
+    chroot("dnf group install -y 'KDE Plasma Workspaces'")
+    # Set system to boot to gui
+    chroot("systemctl set-default graphical.target")
+    # Add chromebook keyboard layout. Needs to be done after install Xorg
+    print_status("Backing up default keymap and setting Chromebook layout")
+    cpfile("/mnt/eupnea/usr/share/X11/xkb/symbols/pc", "/mnt/eupnea/usr/share/X11/xkb/symbols/pc.default")
+    cpfile("configs/xkb/xkb.chromebook", "/mnt/eupnea/usr/share/X11/xkb/symbols/pc")
 
 
-def compress_image() -> None:
-    # TODO: Shrink image
+def compress_image(img_mnt: str) -> None:
+    # Shrink image to actual size
+    bash(f"resize2fs -M {img_mnt}p2")
+    block_count = int(bash(f"sudo dumpe2fs -h {img_mnt}p2 | grep 'Block count:'")[1][12:].strip())
+    actual_fs_in_bytes = block_count * 4096
+    # the kernel part is always the same size -> sector amount: 131072 * 512 => 67108864 bytes
+    actual_fs_in_bytes += 67108864
+    actual_fs_in_bytes += 100000  # add 100kb for linux to be able to boot
+    bash(f"truncate --size={actual_fs_in_bytes} ./eupnea-depthcharge.bin")
+
     # compress image
     bash("tar -cv -I 'xz -9 -T0' -f ./eupnea-depthcharge.bin.tar.xz ./eupnea-depthcharge.bin")
 
@@ -253,12 +265,13 @@ if __name__ == "__main__":
 
     image_props = prepare_image()
     bootstrap_rootfs(image_props[0])
+    configure_rootfs()
     customize_kde()
 
-    compress_image()
-
-    # Unmount image
+    # Unmount image to prevent tar error: "file changed as we read it"
     bash("umount -f /mnt/eupnea")
-    bash(f"losetup -d {image_props[1]}")
+    compress_image(image_props[1])
+
+    bash(f"losetup -d {image_props[1]}")  # unmount image
 
     print_header("Image creation completed successfully!")
