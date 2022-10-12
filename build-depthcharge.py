@@ -58,6 +58,7 @@ def prepare_image() -> Tuple[str, str]:
     # write PARTUUID to kernel flags and save it as a file
     with open(f"configs/kernel.flags", "r") as flags:
         temp_cmdline = flags.read().replace("insert_partuuid", rootfs_partuuid).strip()
+    # SELinux is temporarily disabled, until we can figure out how to relabel files without rebooting
     with open("kernel.flags", "w") as config:
         config.write(temp_cmdline)
 
