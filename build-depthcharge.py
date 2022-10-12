@@ -196,10 +196,10 @@ def customize_kde() -> None:
 
 
 def compress_image() -> None:
-    # TODO: Compress image
-
+    # TODO: Shrink image
+    bash("mv ./eupnea-depthcharge.bin ./eupnea-depthcharge-cut.bin") # just move instead of shrinking for now
     # compress image
-    bash("tar -cv -I 'xz -9 -T0' -f ./eupnea-depthcharge.bin.tar.xz ./eupnea-depthcharge-compressed.bin")
+    bash("tar -cv -I 'xz -9 -T0' -f ./eupnea-depthcharge.bin.tar.xz ./eupnea-depthcharge-cut.bin")
 
 
 def chroot(command: str) -> None:
@@ -259,5 +259,7 @@ if __name__ == "__main__":
     # Unmount image
     bash("umount -f /mnt/eupnea")
     bash(f"losetup -d {image_props[1]}")
+    
+    compress_image()
 
     print_header("Image creation completed successfully!")
