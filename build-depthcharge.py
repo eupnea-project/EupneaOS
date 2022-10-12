@@ -122,7 +122,7 @@ def configure_rootfs() -> None:
     # Copy chromebook firmware
     print_status("Copying google firmware")
     rmdir("/mnt/eupnea/lib/firmware")
-    cpdir("firmware", "/mnt/eupnea/lib/firmware")
+    cpdir("linux-firmware", "/mnt/eupnea/lib/firmware")
 
     # Set device hostname
     with open("/mnt/eupnea/etc/hostname", "w") as hostname_file:
