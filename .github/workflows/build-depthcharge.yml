@@ -44,6 +44,10 @@ jobs:
       - name: Building depthcharge image
         run: python3 build-depthcharge.py -v
 
+      - name: Splitting tar
+        run: |
+          split --verbose -b 1G eupnea-depthcharge.bin.tar.xz eupnea-depthcharge.split.
+
       - name: Generating release tag and setting prerelease + name
         id: tag
         run: |
@@ -66,6 +70,8 @@ jobs:
           body: |
             This is a development build of Eupnea OS. Highly unstable!
             Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
+          #          files: |
+          #            eupnea-depthcharge.bin.tar.xz
+          #            eupnea-depthcharge.bin.rar
           files: |
-            eupnea-depthcharge.bin.tar.xz
-            eupnea-depthcharge.bin.rar
+            eupnea-depthcharge.split.*
