@@ -1,4 +1,4 @@
-name: Building depthcharge image
+name: Building + release depthcharge image
 on:
   workflow_run:
     workflows:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-depthcharge:
+  build-release-depthcharge:
     runs-on: ubuntu-22.04
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
@@ -44,11 +44,28 @@ jobs:
       - name: Building depthcharge image
         run: python3 build-depthcharge.py -v
 
-      - name: Uploading compressed images as artifact
-        uses: actions/upload-artifact@v2
+      - name: Generating release tag and setting prerelease + name
+        id: tag
+        run: |
+          if echo $(git log -1 --pretty=format:"%s") | grep -c "stable"
+          then
+            echo "::set-output name=release_tag::$(date +"%Y.%m.%d_%H-%M")"
+            echo "::set-output name=release_type::false"
+          else
+            echo "::set-output name=release_tag::dev-build" 
+            echo "::set-output name=release_type::true"
+          fi
+          echo "::set-output name=commit_message::$(git log -1 --pretty=format:"%s")"
+
+      - name: Publishing new release
+        uses: softprops/action-gh-release@v1
         with:
-          name: eupnea-depthcharge
-          retention-days: 1 # no need to keep the packages for long, as they get uploaded to releases immediately
-          path: |
+          tag_name: ${{ steps.tag.outputs.release_tag }}
+          name: Image build - ${{ steps.tag.outputs.commit_message }}
+          prerelease: ${{ steps.tag.outputs.release_type }}
+          body: |
+            This is a development build of Eupnea OS. Highly unstable!
+            Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
+          files: |
             eupnea-depthcharge.bin.tar.xz
             eupnea-depthcharge.bin.rar
