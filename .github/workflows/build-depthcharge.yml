@@ -69,6 +69,10 @@ jobs:
           prerelease: ${{ steps.tag.outputs.release_type }}
           body: |
             This is a development build of Eupnea OS. Highly unstable!
+            
+            1. Combine images to a tar with: ``cat eupnea-depthcharge.split.?? > eupnea-depthcharge.tar.xz
+            2. Extract tar, flash bin to usb
+            
             Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
           #          files: |
           #            eupnea-depthcharge.bin.tar.xz
