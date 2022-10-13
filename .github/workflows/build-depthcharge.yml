@@ -46,7 +46,7 @@ jobs:
 
       - name: Splitting tar
         run: |
-          split --verbose -b 1G eupnea-depthcharge.bin.tar.xz eupnea-depthcharge.split.
+          split --verbose -b 1900MB eupnea-depthcharge.bin.tar.xz eupnea-depthcharge.split.
 
       - name: Generating release tag and setting prerelease + name
         id: tag
