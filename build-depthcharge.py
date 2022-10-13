@@ -205,7 +205,7 @@ def compress_image(img_mnt: str) -> None:
     print_status("Shrinking image")
 
     # Shrink image to actual size
-    bash(f"e2fsck -f {img_mnt}p2")  # Force check filesystem for errors
+    bash(f"e2fsck -fpy {img_mnt}p2")  # Force check filesystem for errors
     bash(f"resize2fs -M {img_mnt}p2")
     block_count = int(bash(f"dumpe2fs -h {img_mnt}p2 | grep 'Block count:'")[12:].split()[0])
     actual_fs_in_bytes = block_count * 4096
