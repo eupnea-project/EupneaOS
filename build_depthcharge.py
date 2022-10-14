@@ -200,6 +200,13 @@ def customize_kde() -> None:
     cpfile("/mnt/eupnea/usr/share/X11/xkb/symbols/pc", "/mnt/eupnea/usr/share/X11/xkb/symbols/pc.default")
     cpfile("configs/xkb/xkb.chromebook", "/mnt/eupnea/usr/share/X11/xkb/symbols/pc")
 
+    # Set kde ui settings
+    print_status("Setting General UI settings")
+    cpfile("configs/kde-configs/kwinrc", "/mnt/eupnea/home/liveuser/.config/kwinrc")  # set general kwin settings
+    cpfile("configs/kde-configs/kcminputrc", "/mnt/eupnea/home/liveuser/.config/kcminputrc")  # set touchpad settings
+
+    print_status("Installing global kde theme")
+
 
 def compress_image(img_mnt: str) -> None:
     print_status("Shrinking image")

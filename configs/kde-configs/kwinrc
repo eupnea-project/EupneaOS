@@ -1,0 +1,14 @@
+[Compositing]
+GLTextureFilter=1
+OpenGLIsUnsafe=false
+
+[Effect-blur]
+BlurStrength=9
+NoiseStrength=0
+
+[Plugins]
+blurEnabled=true
+slidebackEnabled=true
+
+[TabBox]
+LayoutName=thumbnails
