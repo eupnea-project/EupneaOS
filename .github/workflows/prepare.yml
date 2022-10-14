@@ -1,7 +1,8 @@
 name: Preparing for image builds
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
