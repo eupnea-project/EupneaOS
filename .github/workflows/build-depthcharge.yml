@@ -1,10 +1,8 @@
 name: Building + release depthcharge image
 on:
-  workflow_run:
-    workflows:
-      - "Preparing for image builds"
-    types:
-      - completed
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
