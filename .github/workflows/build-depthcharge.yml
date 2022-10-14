@@ -42,7 +42,7 @@ jobs:
           curl -L "https://github.com/eupnea-linux/kernel/releases/latest/download/headers.tar.xz" -o /tmp/eupnea-build/headers.tar.xz
 
       - name: Building depthcharge image
-        run: python3 build-depthcharge.py -v
+        run: python3 build_depthcharge.py -v
 
       - name: Splitting tar
         run: |
