@@ -61,6 +61,14 @@ jobs:
           fi
           echo "::set-output name=commit_message::$(git log -1 --pretty=format:"%s")"
 
+      - name: Deleting old dev release
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true
+          tag_name: dev-build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publishing new release
         uses: softprops/action-gh-release@v1
         with:
@@ -70,7 +78,7 @@ jobs:
           body: |
             This is a development build of Eupnea OS. Highly unstable!
             
-            1. Combine images to a tar with: ``cat eupnea-depthcharge.split.?? > eupnea-depthcharge.tar.xz``
+            1. Combine images to a tar with: ``cat eupnea-depthcharge.split.? > eupnea-depthcharge.tar.xz``
             2. Extract tar, flash bin to usb
             
             Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
