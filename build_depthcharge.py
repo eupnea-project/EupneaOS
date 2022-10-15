@@ -206,6 +206,12 @@ def customize_kde() -> None:
     cpfile("configs/kde-configs/kcminputrc", "/mnt/eupnea/home/liveuser/.config/kcminputrc")  # set touchpad settings
 
     print_status("Installing global kde theme")
+    # Installer needs to be run from within chroot
+    cpdir("EupneaOS-theme", "/mnt/eupnea/tmp/eupnea-theme")
+    # run installer script from chroot
+    chroot("python3 /tmp/eupnea-theme/install.py")  # install global theme
+    chroot("bash /tmp/eupnea-theme/sddm/install.sh")  # install login theme
+    rmdir("/mnt/eupnea/tmp/eupnea-theme")  # remove theme repo, to reduce image size
 
 
 def compress_image(img_mnt: str) -> None:
