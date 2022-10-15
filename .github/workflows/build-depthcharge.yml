@@ -27,7 +27,7 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/eupnea-linux/postinstall-scripts.git
           git clone --depth=1 https://github.com/eupnea-linux/audio-scripts.git
-          git clone --depth=1 https://github.com/eupnea-linux/EuoneaOS-theme.git
+          git clone --depth=1 https://github.com/eupnea-linux/EupneaOS-theme.git
           git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware
 
       - name: Create temp directory
