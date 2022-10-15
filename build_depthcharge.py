@@ -202,6 +202,7 @@ def customize_kde() -> None:
 
     # Set kde ui settings
     print_status("Setting General UI settings")
+    mkdir("/mnt/eupnea/home/liveuser/.config")
     cpfile("configs/kde-configs/kwinrc", "/mnt/eupnea/home/liveuser/.config/kwinrc")  # set general kwin settings
     cpfile("configs/kde-configs/kcminputrc", "/mnt/eupnea/home/liveuser/.config/kcminputrc")  # set touchpad settings
 
