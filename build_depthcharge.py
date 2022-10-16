@@ -209,7 +209,7 @@ def customize_kde() -> None:
 
     print_status("Installing global kde theme")
     # Installer needs to be run from within chroot
-    cpdir("EupneaOS-theme", "/mnt/eupnea/tmp/eupnea-theme")
+    cpdir("eupnea-theme", "/mnt/eupnea/tmp/eupnea-theme")
     # run installer script from chroot
     chroot("python3 /tmp/eupnea-theme/install.py")  # install global theme
     chroot("bash /tmp/eupnea-theme/sddm/install.sh")  # install login theme
