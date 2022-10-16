@@ -205,7 +205,7 @@ def customize_kde() -> None:
     mkdir("/mnt/eupnea/home/liveuser/.config")
     cpfile("configs/kde-configs/kwinrc", "/mnt/eupnea/home/liveuser/.config/kwinrc")  # set general kwin settings
     cpfile("configs/kde-configs/kcminputrc", "/mnt/eupnea/home/liveuser/.config/kcminputrc")  # set touchpad settings
-    bash("chown -R liveuser:liveuser /home/liveuser/.config")  # set permissions
+    bash("chown -R liveuser /home/liveuser/.config")  # set permissions
 
     print_status("Installing global kde theme")
     # Installer needs to be run from within chroot
