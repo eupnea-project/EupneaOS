@@ -205,7 +205,7 @@ def customize_kde() -> None:
     mkdir("/mnt/eupnea/home/liveuser/.config")
     cpfile("configs/kde-configs/kwinrc", "/mnt/eupnea/home/liveuser/.config/kwinrc")  # set general kwin settings
     cpfile("configs/kde-configs/kcminputrc", "/mnt/eupnea/home/liveuser/.config/kcminputrc")  # set touchpad settings
-    bash("chmod -R 755 /home/liveuser/.config")  # set permissions
+    bash("chmod 755 /home/liveuser/.config/*")  # set permissions
 
     print_status("Installing global kde theme")
     # Installer needs to be run from within chroot
@@ -277,6 +277,7 @@ if __name__ == "__main__":
         kernel_type = "mainline"
     if args.verbose:
         print_warning("Verbosity increased")
+        set_verbose(True)  # set verbose in functions.py
 
     # Check that required packages are installed and yum repos are present
     if not path_exists("/usr/bin/dnf") and not path_exists("/etc/yum.repos.d/"):
