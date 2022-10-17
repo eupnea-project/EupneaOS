@@ -211,7 +211,7 @@ def customize_kde() -> None:
     # Installer needs to be run from within chroot
     cpdir("eupnea-theme", "/mnt/eupnea/tmp/eupnea-theme")
     # run installer script from chroot
-    chroot("python3 /tmp/eupnea-theme/install.py")  # install global theme
+    chroot("cd /tmp/eupnea-theme && python3 /tmp/eupnea-theme/install.py")  # install global theme
     chroot("bash /tmp/eupnea-theme/sddm/install.sh")  # install login theme
     rmdir("/mnt/eupnea/tmp/eupnea-theme")  # remove theme repo, to reduce image size
 
