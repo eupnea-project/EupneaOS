@@ -87,7 +87,7 @@ def bootstrap_rootfs(root_partuuid) -> None:
     cpfile("/etc/resolv.conf", "/mnt/eupnea/run/systemd/resolve/stub-resolv.conf")  # copy hosts resolv.conf to chroot
 
     # TODO: Replace generic repos with own eupnea repos
-    chroot("dnf install  --releasever=36 --allowerasing -y generic-logos generic-release generic-release-common")
+    chroot("dnf install --releasever=36 --allowerasing -y generic-logos generic-release generic-release-common")
     chroot("dnf group install -y 'Common NetworkManager Submodules'")
     chroot("dnf group install -y 'Hardware Support'")
     chroot("dnf install -y linux-firmware")
