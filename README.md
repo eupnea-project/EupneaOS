@@ -1,11 +1,11 @@
 # EupneaOS
-A Fedora based distro, optimized for Chromebooks.  
+A [Fedora](https://getfedora.org) based distro, optimized for Chromebooks.  
 
 **EupneaOS is currently in alpha**
 
 ## Feautures:
 * Customized Desktop Environment(KDE) to look and feel like ChromeOS
-* Modified ChromeOS kernel -> hardware support equal to ChromeOS
+* Modified ChromeOS kernel -> hardware support equal on par with ChromeOS
 * Preinstalled [waydroid](https://waydro.id/) -> Android support out-of-the-box
 * A lot of Chromebook specific tweaks out-of-the-box
 
