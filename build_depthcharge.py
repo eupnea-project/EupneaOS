@@ -24,9 +24,9 @@ def prepare_image() -> str:
     print_status("Preparing image")
 
     try:
-        bash(f"fallocate -l 8G eupnea-depthcharge.bin")
+        bash(f"fallocate -l 10G eupnea-depthcharge.bin")
     except subprocess.CalledProcessError:  # try fallocate, if it fails use dd
-        bash(f"dd if=/dev/zero of=eupnea-depthcharge.bin status=progress bs=1024 count={8 * 1000000}")
+        bash(f"dd if=/dev/zero of=eupnea-depthcharge.bin status=progress bs=1024 count={10 * 1000000}")
     print_status("Mounting empty image")
     img_mnt = bash("losetup -f --show eupnea-depthcharge.bin")
     if img_mnt == "":
@@ -87,8 +87,8 @@ def bootstrap_rootfs() -> None:
 
     # TODO: Replace generic repos with own EupneaOS repos
     chroot("dnf install --releasever=37 --allowerasing -y generic-logos generic-release generic-release-common")
-    chroot("dnf group install -y 'Common NetworkManager Submodules'")
     chroot("dnf group install -y 'Hardware Support'")
+    chroot("dnf group install -y 'Common NetworkManager Submodules'")
     chroot("dnf install -y linux-firmware")
 
     # Add RPMFusion repos
@@ -209,13 +209,15 @@ def compress_image(img_mnt: str) -> None:
     rmdir("/mnt/eupnea-os/var/tmp/")
 
     # Shrink image to actual size
-    bash(f"e2fsck -fpv {img_mnt}p2")  # Force check filesystem for errors
-    bash(f"resize2fs -M {img_mnt}p2")
-    block_count = int(bash(f"dumpe2fs -h {img_mnt}p2 | grep 'Block count:'")[12:].split()[0])
+    print_status("Shrinking image")
+    bash(f"e2fsck -fpv {img_mnt}p3")  # Force check filesystem for errors
+    bash(f"resize2fs -f -M {img_mnt}p3")
+    block_count = int(bash(f"dumpe2fs -h {img_mnt}p3 | grep 'Block count:'")[12:].split()[0])
     actual_fs_in_bytes = block_count * 4096
     # the kernel part is always the same size -> sector amount: 131072 * 512 => 67108864 bytes
-    actual_fs_in_bytes += 67108864
-    actual_fs_in_bytes += 102400  # add 100kb for linux to be able to boot
+    # There are 2 kernel partitions -> 67108864 bytes * 2 = 134217728 bytes
+    actual_fs_in_bytes += 134217728
+    actual_fs_in_bytes += 20971520  # add 20mb for linux to be able to boot properly
     bash(f"truncate --size={actual_fs_in_bytes} ./eupnea-depthcharge.bin")
 
     # compress image to tar. Tars are smaller but the native file manager on chromeos cant uncompress them
