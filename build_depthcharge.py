@@ -245,11 +245,6 @@ if __name__ == "__main__":
         print_warning("Using mainline testing kernel")
         kernel_type = "mainline-testing"
 
-    # Check that required packages are installed and yum repos are present
-    if not path_exists("/usr/bin/dnf") and not path_exists("/etc/yum.repos.d/"):
-        print_error("Install dnf and add yum repos!")
-        exit(1)
-
     # prepare mount
     mkdir("/mnt/eupnea-os", create_parents=True)
 
