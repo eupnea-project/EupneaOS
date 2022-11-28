@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 1
 
       - name: Installing dependencies
-        run: sudo apt-get install -y cgpt vboot-kernel-utils curl
+        run: sudo apt-get install -y cgpt vboot-kernel-utils curl rar
 
       - name: Cloning git repositories
         run: |
