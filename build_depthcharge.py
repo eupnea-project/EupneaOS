@@ -2,6 +2,8 @@
 # This script is cloud oriented, so it is not very user-friendly.
 
 import argparse
+import os
+import sys
 
 from functions import *
 
@@ -228,6 +230,11 @@ def chroot(command: str) -> None:
 
 
 if __name__ == "__main__":
+    # Restart script as root
+    if not os.geteuid() == 0:
+        sudo_args = ['sudo', sys.executable] + sys.argv + [os.environ]
+        os.execlpe('sudo', *sudo_args)
+
     args = process_args()  # process args
     set_verbose(True)  # increase verbosity
 
