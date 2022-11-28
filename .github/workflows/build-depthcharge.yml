@@ -74,7 +74,7 @@ jobs:
           body: |
             This is a development build of EupneaOS. Highly unstable!
             
-            1. Combine images to a tar with: ``cat eupneaos-depthcharge.split.?? > eupneaos-depthcharge.tar.xz``
+            1. Combine images to a tar with: ``cat eupneaos-depthcharge.split.?? > eupneaos-depthcharge.bin.tar.xz``
             2. Extract tar
             3. Verify the checksum: ``sha256sum -c --ignore-missing eupneaos-depthcharge.sha256``
             3. Flash bin to usb/sd-card
