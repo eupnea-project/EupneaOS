@@ -25,27 +25,33 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/eupnea-linux/postinstall-scripts.git
           git clone --depth=1 https://github.com/eupnea-linux/audio-scripts.git
-          git clone --depth=1 https://github.com/eupnea-linux/eupnea-os-theme.git
+          git clone --depth=1 https://github.com/eupnea-linux/eupneaos-theme.git
           git clone --depth=1 https://github.com/eupnea-linux/systemd-services.git
           git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware
 
       - name: Create temp directory
-        run: mkdir /tmp/eupnea-os-build/
+        run: mkdir /tmp/eupneaos-build/
 
       - name: Downloading kernel, modules, headers
         run: |
-          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/latest/download/bzImage-stable" -o /tmp/eupnea-os-build/bzImage
-          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/latest/download/modules-stable.tar.xz" -o /tmp/eupnea-os-build/modules.tar.xz
-          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/latest/download/headers-stable.tar.xz" -o /tmp/eupnea-os-build/headers.tar.xz
+          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/latest/download/bzImage-stable" -o /tmp/eupneaos-build/bzImage
+          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/latest/download/modules-stable.tar.xz" -o /tmp/eupneaos-build/modules.tar.xz
+          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/latest/download/headers-stable.tar.xz" -o /tmp/eupneaos-build/headers.tar.xz
 
       - name: Downloading fedora rootfs
-        run: curl -L "https://github.com/eupnea-linux/fedora-rootfs/releases/latest/download/fedora-rootfs-37.tar.xz" -o /tmp/eupnea-os-build/rootfs.tar.xz
+        run: curl -L "https://github.com/eupnea-linux/fedora-rootfs/releases/latest/download/fedora-rootfs-37.tar.xz" -o /tmp/eupneaos-build/rootfs.tar.xz
 
       - name: Building depthcharge image
         run: sudo python3 build_depthcharge.py
 
-      - name: Splitting tar
-        run: split --verbose -b 1900MB eupnea-depthcharge.bin.tar.xz eupnea-depthcharge.split.
+      - name: Uploading depthcharge rar archive as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: eupneaos-depthcharge.bin.rar
+          path: ./eupneaos.depthcharge.bin.rar
+
+      - name: Splitting tar archive
+        run: split --verbose -b 1900MB eupneaos-depthcharge.bin.tar.xz eupneaos-depthcharge.split.
 
       - name: Generating release message
         id: tag
@@ -66,11 +72,14 @@ jobs:
           name: Image build - ${{ steps.tag.outputs.commit_message }}
           prerelease: true
           body: |
-            This is a development build of Eupnea OS. Highly unstable!
+            This is a development build of EupneaOS. Highly unstable!
             
-            1. Combine images to a tar with: ``cat eupnea-depthcharge.split.?? > eupnea-depthcharge.tar.xz``
-            2. Extract tar, flash bin to usb
+            1. Combine images to a tar with: ``cat eupneaos-depthcharge.split.?? > eupneaos-depthcharge.tar.xz``
+            2. Extract tar
+            3. Verify the checksum: ``sha256sum -c --ignore-missing eupneaos-depthcharge.sha256``
+            3. Flash bin to usb/sd-card
             
             Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
           files: |
-            eupnea-depthcharge.split.*
+            eupneaos-depthcharge.split.*
+            eupneaos-depthcharge.sha256

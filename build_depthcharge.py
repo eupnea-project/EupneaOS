@@ -24,11 +24,11 @@ def prepare_image() -> str:
     print_status("Preparing image")
 
     try:
-        bash(f"fallocate -l 10G eupnea-depthcharge.bin")
+        bash(f"fallocate -l 10G eupneaos-depthcharge.bin")
     except subprocess.CalledProcessError:  # try fallocate, if it fails use dd
-        bash(f"dd if=/dev/zero of=eupnea-depthcharge.bin status=progress bs=1024 count={10 * 1000000}")
+        bash(f"dd if=/dev/zero of=eupneaos-depthcharge.bin status=progress bs=1024 count={10 * 1000000}")
     print_status("Mounting empty image")
-    img_mnt = bash("losetup -f --show eupnea-depthcharge.bin")
+    img_mnt = bash("losetup -f --show eupneaos-depthcharge.bin")
     if img_mnt == "":
         print_error("Failed to mount image")
         exit(1)
@@ -50,7 +50,7 @@ def prepare_image() -> str:
     # Create rootfs ext4 partition
     bash(f"yes 2>/dev/null | mkfs.ext4 {rootfs_mnt}")  # 2>/dev/null is to supress yes broken pipe warning
     # Mount rootfs partition
-    bash(f"mount {rootfs_mnt} /mnt/eupnea-os")
+    bash(f"mount {rootfs_mnt} /mnt/eupneaos")
 
     # get uuid of rootfs partition
     rootfs_partuuid = bash(f"blkid -o value -s PARTUUID {rootfs_mnt}")
@@ -71,19 +71,19 @@ def flash_kernel(kernel_part: str) -> None:
     # Sign kernel
     bash("futility vbutil_kernel --arch x86_64 --version 1 --keyblock /usr/share/vboot/devkeys/kernel.keyblock"
          + " --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk --bootloader kernel.flags" +
-         " --config kernel.flags --vmlinuz /tmp/eupnea-os-build/bzImage --pack /tmp/eupnea-os-build/bzImage.signed")
-    bash(f"dd if=/tmp/eupnea-os-build/bzImage.signed of={kernel_part}")  # part 1 is the kernel partition
+         " --config kernel.flags --vmlinuz /tmp/eupneaos-build/bzImage --pack /tmp/eupneaos-build/bzImage.signed")
+    bash(f"dd if=/tmp/eupneaos-build/bzImage.signed of={kernel_part}")  # part 1 is the kernel partition
 
     print_status("Kernel flashed successfully")
 
 
 # Make a bootable rootfs
 def bootstrap_rootfs() -> None:
-    bash("tar xfp /tmp/eupnea-os-build/rootfs.tar.xz -C /mnt/eupnea-os --checkpoint=.10000")
+    bash("tar xfp /tmp/eupneaos-build/rootfs.tar.xz -C /mnt/eupneaos --checkpoint=.10000")
     # Create a temporary resolv.conf for internet inside the chroot
-    mkdir("/mnt/eupnea-os/run/systemd/resolve", create_parents=True)  # dir doesnt exist coz systemd didnt run
+    mkdir("/mnt/eupneaos/run/systemd/resolve", create_parents=True)  # dir doesnt exist coz systemd didnt run
     cpfile("/etc/resolv.conf",
-           "/mnt/eupnea-os/run/systemd/resolve/stub-resolv.conf")  # copy hosts resolv.conf to chroot
+           "/mnt/eupneaos/run/systemd/resolve/stub-resolv.conf")  # copy hosts resolv.conf to chroot
 
     # TODO: Replace generic repos with own EupneaOS repos
     chroot("dnf install --releasever=37 --allowerasing -y generic-logos generic-release generic-release-common")
@@ -99,20 +99,20 @@ def bootstrap_rootfs() -> None:
 def configure_rootfs() -> None:
     # Extract kernel modules
     print_status("Extracting kernel modules")
-    rmdir("/mnt/eupnea-os/lib/modules")  # remove all old modules
-    mkdir("/mnt/eupnea-os/lib/modules")
-    bash(f"tar xpf /tmp/eupnea-os-build/modules.tar.xz -C /mnt/eupnea-os/lib/modules/ --checkpoint=.10000")
+    rmdir("/mnt/eupneaos/lib/modules")  # remove all old modules
+    mkdir("/mnt/eupneaos/lib/modules")
+    bash(f"tar xpf /tmp/eupneaos-build/modules.tar.xz -C /mnt/eupneaos/lib/modules/ --checkpoint=.10000")
     print("")  # break line after tar
 
     # Enable loading modules needed for eupnea
-    cpfile("configs/eupnea-modules.conf", "/mnt/eupnea-os/etc/modules-load.d/eupnea-modules.conf")
+    cpfile("configs/eupnea-modules.conf", "/mnt/eupneaos/etc/modules-load.d/eupnea-modules.conf")
 
     # Extract kernel headers
     print_status("Extracting kernel headers")
-    dir_kernel_version = bash(f"ls /mnt/eupnea-os/lib/modules/").strip()  # get modules dir name
-    rmdir(f"/mnt/eupnea-os/usr/src/linux-headers-{dir_kernel_version}", keep_dir=False)  # remove old headers
-    mkdir(f"/mnt/eupnea-os/usr/src/linux-headers-{dir_kernel_version}", create_parents=True)
-    bash(f"tar xpf /tmp/eupnea-os-build/headers.tar.xz -C /mnt/eupnea-os/usr/src/linux-headers-{dir_kernel_version}/ "
+    dir_kernel_version = bash(f"ls /mnt/eupneaos/lib/modules/").strip()  # get modules dir name
+    rmdir(f"/mnt/eupneaos/usr/src/linux-headers-{dir_kernel_version}", keep_dir=False)  # remove old headers
+    mkdir(f"/mnt/eupneaos/usr/src/linux-headers-{dir_kernel_version}", create_parents=True)
+    bash(f"tar xpf /tmp/eupneaos-build/headers.tar.xz -C /mnt/eupneaos/usr/src/linux-headers-{dir_kernel_version}/ "
          f"--checkpoint=.10000")
     print("")  # break line after tar
     chroot(f"ln -s /usr/src/linux-headers-{dir_kernel_version}/ "
@@ -121,7 +121,7 @@ def configure_rootfs() -> None:
     # copy previously downloaded firmware
     print_status("Copying google firmware")
     start_progress(force_show=True)  # start fake progress
-    cpdir("linux-firmware", "/mnt/eupnea-os/lib/firmware")
+    cpdir("linux-firmware", "/mnt/eupneaos/lib/firmware")
     stop_progress(force_show=True)  # stop fake progress
 
     print_status("Configuring liveuser")
@@ -129,7 +129,7 @@ def configure_rootfs() -> None:
     chroot("usermod -aG wheel liveuser")  # add user to wheel
     chroot(f'echo "liveuser:eupneaos" | chpasswd')  # set password to eupneaos
     # set up automatic login on boot for temp-user
-    with open("/mnt/eupnea-os/etc/sddm.conf", "a") as sddm_conf:
+    with open("/mnt/eupneaos/etc/sddm.conf", "a") as sddm_conf:
         sddm_conf.write("\n[Autologin]\nUser=liveuser\nSession=plasma.desktop\n")
 
     print_status("Copying eupnea scripts and configs")
@@ -139,23 +139,23 @@ def configure_rootfs() -> None:
             if file.name == "LICENSE" or file.name == "README.md" or file.name == ".gitignore":
                 continue  # dont copy license, readme and gitignore
             else:
-                cpfile(file.absolute().as_posix(), f"/mnt/eupnea-os/usr/local/bin/{file.name}")
+                cpfile(file.absolute().as_posix(), f"/mnt/eupneaos/usr/local/bin/{file.name}")
 
     # copy audio setup script
-    cpfile("audio-scripts/setup-audio", "/mnt/eupnea-os/usr/local/bin/setup-audio")
+    cpfile("audio-scripts/setup-audio", "/mnt/eupneaos/usr/local/bin/setup-audio")
 
     # copy functions file
-    cpfile("functions.py", "/mnt/eupnea-os/usr/local/bin/functions.py")
+    cpfile("functions.py", "/mnt/eupneaos/usr/local/bin/functions.py")
     chroot("chmod 755 /usr/local/bin/*")  # make scripts executable in system
 
     # copy configs
-    mkdir("/mnt/eupnea-os/etc/eupnea")
-    cpdir("configs", "/mnt/eupnea-os/etc/eupnea")  # eupnea general configs
-    cpdir("postinstall-scripts/configs", "/mnt/eupnea-os/etc/eupnea")  # postinstall configs
-    cpdir("audio-scripts/configs", "/mnt/eupnea-os/etc/eupnea")  # audio configs
+    mkdir("/mnt/eupneaos/etc/eupnea")
+    cpdir("configs", "/mnt/eupneaos/etc/eupnea")  # eupnea general configs
+    cpdir("postinstall-scripts/configs", "/mnt/eupneaos/etc/eupnea")  # postinstall configs
+    cpdir("audio-scripts/configs", "/mnt/eupneaos/etc/eupnea")  # audio configs
 
     # copy preset eupnea settings file for postinstall scripts to read
-    cpfile("configs/eupnea.json", "/mnt/eupnea-os/etc/eupnea.json")
+    cpfile("configs/eupnea.json", "/mnt/eupneaos/etc/eupnea.json")
 
     # Install systemd services
     print_status("Installing systemd services")
@@ -165,15 +165,15 @@ def configure_rootfs() -> None:
             if file.name == "LICENSE" or file.name == "README.md" or file.name == ".gitignore":
                 continue  # dont copy license, readme and gitignore
             else:
-                cpfile(file.absolute().as_posix(), f"/mnt/eupnea-os/etc/systemd/system/{file.name}")
+                cpfile(file.absolute().as_posix(), f"/mnt/eupneaos/etc/systemd/system/{file.name}")
     chroot("systemctl enable eupnea-postinstall.service")
     chroot("systemctl enable eupnea-update.timer")
 
     print_status("Fixing sleep")
     # disable hibernation aka S4 sleep, READ: https://eupnea-linux.github.io/main.html#/pages/bootlock
     # TODO: Fix S4 sleep
-    mkdir("/mnt/eupnea-os/etc/systemd/")  # just in case systemd path doesn't exist
-    with open("/mnt/eupnea-os/etc/systemd/sleep.conf", "a") as conf:
+    mkdir("/mnt/eupneaos/etc/systemd/")  # just in case systemd path doesn't exist
+    with open("/mnt/eupneaos/etc/systemd/sleep.conf", "a") as conf:
         conf.write("SuspendState=freeze\nHibernateState=freeze\n")
 
 
@@ -184,29 +184,29 @@ def customize_kde() -> None:
     chroot("systemctl set-default graphical.target")
     # Add chromebook keyboard layout. Needs to be done after install Xorg
     print_status("Backing up default keymap and setting Chromebook layout")
-    cpfile("/mnt/eupnea-os/usr/share/X11/xkb/symbols/pc", "/mnt/eupnea-os/usr/share/X11/xkb/symbols/pc.default")
-    cpfile("configs/xkb/xkb.chromebook", "/mnt/eupnea-os/usr/share/X11/xkb/symbols/pc")
+    cpfile("/mnt/eupneaos/usr/share/X11/xkb/symbols/pc", "/mnt/eupneaos/usr/share/X11/xkb/symbols/pc.default")
+    cpfile("configs/xkb/xkb.chromebook", "/mnt/eupneaos/usr/share/X11/xkb/symbols/pc")
 
     # Set kde ui settings
     print_status("Setting General UI settings")
-    mkdir("/mnt/eupnea-os/home/liveuser/.config")
-    cpfile("configs/kde-configs/kwinrc", "/mnt/eupnea-os/home/liveuser/.config/kwinrc")  # set general kwin settings
-    cpfile("configs/kde-configs/kcminputrc", "/mnt/eupnea-os/home/liveuser/.config/kcminputrc")  # set touchpad settings
+    mkdir("/mnt/eupneaos/home/liveuser/.config")
+    cpfile("configs/kde-configs/kwinrc", "/mnt/eupneaos/home/liveuser/.config/kwinrc")  # set general kwin settings
+    cpfile("configs/kde-configs/kcminputrc", "/mnt/eupneaos/home/liveuser/.config/kcminputrc")  # set touchpad settings
     chroot("chown -R liveuser:liveuser /home/liveuser/.config")  # set permissions
 
     print_status("Installing global kde theme")
     # Installer needs to be run from within chroot
-    cpdir("eupnea-os-theme", "/mnt/eupnea-os/tmp/eupnea-os-theme")
+    cpdir("eupneaos-theme", "/mnt/eupneaos/tmp/eupneaos-theme")
     # run installer script from chroot
-    chroot("cd /tmp/eupnea-os-theme && bash /tmp/eupnea-os-theme/install.sh")  # install global theme
+    chroot("cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh")  # install global theme
 
 
 def compress_image(img_mnt: str) -> None:
     print_status("Shrinking image")
 
     # Remove all tmp files
-    rmdir("/mnt/eupnea-os/tmp/")
-    rmdir("/mnt/eupnea-os/var/tmp/")
+    rmdir("/mnt/eupneaos/tmp/")
+    rmdir("/mnt/eupneaos/var/tmp/")
 
     # Shrink image to actual size
     print_status("Shrinking image")
@@ -218,17 +218,25 @@ def compress_image(img_mnt: str) -> None:
     # There are 2 kernel partitions -> 67108864 bytes * 2 = 134217728 bytes
     actual_fs_in_bytes += 134217728
     actual_fs_in_bytes += 20971520  # add 20mb for linux to be able to boot properly
-    bash(f"truncate --size={actual_fs_in_bytes} ./eupnea-depthcharge.bin")
+    bash(f"truncate --size={actual_fs_in_bytes} ./eupneaos-depthcharge.bin")
 
     # compress image to tar. Tars are smaller but the native file manager on chromeos cant uncompress them
-    bash("tar -cv -I 'xz -9 -T0' -f ./eupnea-depthcharge.bin.tar.xz ./eupnea-depthcharge.bin")
+    # These are stored as backups in the GitHub releases
+    bash("tar -cv -I 'xz -9 -T0' -f ./eupneaos-depthcharge.bin.tar.xz ./eupneaos-depthcharge.bin")
 
-    # Rars are bigger but natively supported by the ChromeOS file manager
-    bash("rar a eupnea-depthcharge.bin.rar -m5 eupnea-depthcharge.bin")
+    # Rar archives are bigger, but natively supported by the ChromeOS file manager
+    # These are uploaded as artifacts and then manually uploaded to a cloud storage
+    bash("rar a eupneaos-depthcharge.bin.rar -m5 eupneaos-depthcharge.bin")
+
+    print_status("Calculating sha256sums")
+    # Calculate sha256sum sums
+    with open("eupneaos-depthcharge.sha256", "w") as file:
+        file.write(bash("sha256sum eupneaos-depthcharge.bin eupneaos-depthcharge.bin.tar.xz "
+                        "eupneaos-depthcharge.bin.rar"))
 
 
 def chroot(command: str) -> None:
-    bash(f'chroot /mnt/eupnea-os /bin/bash -c "{command}"')  # always print output
+    bash(f'chroot /mnt/eupneaos /bin/bash -c "{command}"')  # always print output
 
 
 if __name__ == "__main__":
@@ -250,7 +258,7 @@ if __name__ == "__main__":
         kernel_type = "mainline-testing"
 
     # prepare mount
-    mkdir("/mnt/eupnea-os", create_parents=True)
+    mkdir("/mnt/eupneaos", create_parents=True)
 
     image_props = prepare_image()
     bootstrap_rootfs()
@@ -258,7 +266,7 @@ if __name__ == "__main__":
     customize_kde()
 
     # Unmount image to prevent tar error: "file changed as we read it"
-    bash("umount -f /mnt/eupnea-os")
+    bash("umount -f /mnt/eupneaos")
     sleep(5)  # wait for umount to finish
     compress_image(image_props)
 
