@@ -165,7 +165,7 @@ def configure_rootfs() -> None:
             if file.name == "LICENSE" or file.name == "README.md" or file.name == ".gitignore":
                 continue  # dont copy license, readme and gitignore
             else:
-                cpfile(file.absolute().as_posix(), f"/mnt/depthboot/etc/systemd/system/{file.name}")
+                cpfile(file.absolute().as_posix(), f"/mnt/eupnea-os/etc/systemd/system/{file.name}")
     chroot("systemctl enable eupnea-postinstall.service")
     chroot("systemctl enable eupnea-update.timer")
 
