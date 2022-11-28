@@ -9,14 +9,11 @@ from functions import *
 # parse arguments from the cli. Only for testing/advanced use. All other parameters are handled by cli_input.py
 def process_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dev", action="store_true", dest="dev_build", default=False,
-                        help="Use latest dev build. May be unstable.")
-    parser.add_argument("--alt", action="store_true", dest="alt", default=False,
-                        help="Use alt kernel. Only for older devices.")
-    parser.add_argument("--exp", action="store_true", dest="exp", default=False,
-                        help="Use experimental 5.15 kernel.")
-    parser.add_argument("--mainline", action="store_true", dest="mainline", default=False,
-                        help="Use mainline kernel instead of modified chromeos kernel.")
+    parser.add_argument("--dev", dest="dev_build", default=False, help="Use latest dev build. May be unstable.")
+    parser.add_argument("--stable", dest="stable", default=False, help="Use chromeos stable kernel.")
+    parser.add_argument("--exp", dest="exp", default=False, help="Use chromeos experimental 5.15 kernel.")
+    parser.add_argument("--mainline-testing", dest="mainline-testing", default=False,
+                        help="Use mainline testing kernel.")
     return parser.parse_args()
 
 
@@ -243,7 +240,7 @@ if __name__ == "__main__":
         kernel_type = "exp"
     if args.stable:
         print_warning("Using stable chromes kernel")
-        kernel_type = "mainline"
+        kernel_type = "stable"
     if args.mainline_testing:
         print_warning("Using mainline testing kernel")
         kernel_type = "mainline-testing"
