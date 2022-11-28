@@ -198,7 +198,7 @@ def customize_kde() -> None:
     # Installer needs to be run from within chroot
     cpdir("eupnea-os-theme", "/mnt/eupnea-os/tmp/eupnea-os-theme")
     # run installer script from chroot
-    chroot("cd /tmp/eupnea-os-theme && bash /tmp/eupnea-theme/install.sh")  # install global theme
+    chroot("cd /tmp/eupnea-os-theme && bash /tmp/eupnea-os-theme/install.sh")  # install global theme
 
 
 def compress_image(img_mnt: str) -> None:
