@@ -48,7 +48,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: eupneaos-depthcharge.bin.rar
-          path: ./eupneaos.depthcharge.bin.rar
+          path: ./eupneaos-depthcharge.bin.rar
 
       - name: Splitting tar archive
         run: split --verbose -b 1900MB eupneaos-depthcharge.bin.tar.xz eupneaos-depthcharge.split.
