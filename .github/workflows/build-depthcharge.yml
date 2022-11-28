@@ -5,6 +5,10 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-release-depthcharge:
     runs-on: ubuntu-22.04
