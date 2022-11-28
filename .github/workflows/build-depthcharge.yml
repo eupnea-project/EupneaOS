@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 1
 
       - name: Installing dependencies
-        run: sudo apt-get install -y cgpt vboot-kernel-utils dnf curl rar
+        run: sudo apt-get install -y cgpt vboot-kernel-utils dnf curl
 
       - name: Adding yum repos for dnf
         run: sudo cp -r configs/yum.repos.d/ /etc/yum.repos.d/
@@ -23,41 +23,35 @@ jobs:
       - name: Adding gpg keys repos for dnf
         run: sudo cp -r configs/rpm-gpg /etc/pki/
 
-      - name: Cloning repositories
+      - name: Cloning git repositories
         run: |
           git clone --depth=1 https://github.com/eupnea-linux/postinstall-scripts.git
           git clone --depth=1 https://github.com/eupnea-linux/audio-scripts.git
-          git clone --depth=1 https://github.com/eupnea-linux/eupnea-theme.git
+          git clone --depth=1 https://github.com/eupnea-linux/eupnea-os-theme.git
+          git clone --depth=1 https://github.com/eupnea-linux/systemd-services.git
           git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware
 
       - name: Create temp directory
-        run: mkdir /tmp/eupnea-build/
+        run: mkdir /tmp/eupnea-os-build/
 
       - name: Downloading kernel, modules, headers
         run: |
-          curl -L "https://github.com/eupnea-linux/kernel/releases/latest/download/bzImage" -o /tmp/eupnea-build/bzImage
-          curl -L "https://github.com/eupnea-linux/kernel/releases/latest/download/modules.tar.xz" -o /tmp/eupnea-build/modules.tar.xz
-          curl -L "https://github.com/eupnea-linux/kernel/releases/latest/download/headers.tar.xz" -o /tmp/eupnea-build/headers.tar.xz
+          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/latest/download/bzImage-stable" -o /tmp/eupnea-os-build/bzImage
+          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/latest/download/modules-stable.tar.xz" -o /tmp/eupnea-os-build/modules.tar.xz
+          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/latest/download/headers-stable.tar.xz" -o /tmp/eupnea-os-build/headers.tar.xz
+
+      - name: Downloading fedora rootfs
+        run: curl -L "https://github.com/eupnea-linux/fedora-rootfs/releases/latest/download/fedora-rootfs-37.tar.xz" -o /tmp/eupnea-os-build/rootfs.tar.xz
 
       - name: Building depthcharge image
-        run: python3 build_depthcharge.py -v
+        run: sudo python3 build_depthcharge.py
 
       - name: Splitting tar
-        run: |
-          split --verbose -b 1900MB eupnea-depthcharge.bin.tar.xz eupnea-depthcharge.split.
+        run: split --verbose -b 1900MB eupnea-depthcharge.bin.tar.xz eupnea-depthcharge.split.
 
-      - name: Generating release tag and setting prerelease + name
+      - name: Generating release message
         id: tag
-        run: |
-          if echo $(git log -1 --pretty=format:"%s") | grep -c "stable"
-          then
-            echo "::set-output name=release_tag::$(date +"%Y.%m.%d_%H-%M")"
-            echo "::set-output name=release_type::false"
-          else
-            echo "::set-output name=release_tag::dev-build" 
-            echo "::set-output name=release_type::true"
-          fi
-          echo "::set-output name=commit_message::$(git log -1 --pretty=format:"%s")"
+        run: echo "::set-output name=commit_message::$(git log -1 --pretty=format:"%s")"
 
       - name: Deleting old dev release
         uses: dev-drprasad/delete-tag-and-release@v0.2.0
@@ -70,9 +64,9 @@ jobs:
       - name: Publishing new release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.tag.outputs.release_tag }}
+          tag_name: dev-build
           name: Image build - ${{ steps.tag.outputs.commit_message }}
-          prerelease: ${{ steps.tag.outputs.release_type }}
+          prerelease: true
           body: |
             This is a development build of Eupnea OS. Highly unstable!
             
@@ -80,8 +74,5 @@ jobs:
             2. Extract tar, flash bin to usb
             
             Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
-          #          files: |
-          #            eupnea-depthcharge.bin.tar.xz
-          #            eupnea-depthcharge.bin.rar
           files: |
             eupnea-depthcharge.split.*
