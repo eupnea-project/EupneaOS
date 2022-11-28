@@ -86,7 +86,7 @@ def bootstrap_rootfs() -> None:
            "/mnt/eupnea-os/run/systemd/resolve/stub-resolv.conf")  # copy hosts resolv.conf to chroot
 
     # TODO: Replace generic repos with own EupneaOS repos
-    chroot("dnf install --releasever=36 --allowerasing -y generic-logos generic-release generic-release-common")
+    chroot("dnf install --releasever=37 --allowerasing -y generic-logos generic-release generic-release-common")
     chroot("dnf group install -y 'Common NetworkManager Submodules'")
     chroot("dnf group install -y 'Hardware Support'")
     chroot("dnf install -y linux-firmware")
@@ -230,11 +230,6 @@ def chroot(command: str) -> None:
 
 
 if __name__ == "__main__":
-    # Restart script as root
-    if not os.geteuid() == 0:
-        sudo_args = ['sudo', sys.executable] + sys.argv + [os.environ]
-        os.execlpe('sudo', *sudo_args)
-
     args = process_args()  # process args
     set_verbose(True)  # increase verbosity
 

@@ -42,7 +42,7 @@ jobs:
         run: curl -L "https://github.com/eupnea-linux/fedora-rootfs/releases/latest/download/fedora-rootfs-37.tar.xz" -o /tmp/eupnea-os-build/rootfs.tar.xz
 
       - name: Building depthcharge image
-        run: python3 build_depthcharge.py
+        run: sudo python3 build_depthcharge.py
 
       - name: Splitting tar
         run: split --verbose -b 1900MB eupnea-depthcharge.bin.tar.xz eupnea-depthcharge.split.
