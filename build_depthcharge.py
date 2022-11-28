@@ -81,7 +81,7 @@ def bootstrap_rootfs() -> None:
     # Create a temporary resolv.conf for internet inside the chroot
     mkdir("/mnt/eupnea-os/run/systemd/resolve", create_parents=True)  # dir doesnt exist coz systemd didnt run
     cpfile("/etc/resolv.conf",
-           "/mnt/eupnea-os-os/run/systemd/resolve/stub-resolv.conf")  # copy hosts resolv.conf to chroot
+           "/mnt/eupnea-os/run/systemd/resolve/stub-resolv.conf")  # copy hosts resolv.conf to chroot
 
     # TODO: Replace generic repos with own EupneaOS repos
     chroot("dnf install --releasever=36 --allowerasing -y generic-logos generic-release generic-release-common")
