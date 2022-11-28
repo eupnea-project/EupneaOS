@@ -22,9 +22,9 @@ def prepare_image() -> str:
     print_status("Preparing image")
 
     try:
-        bash(f"fallocate -l 8G depthboot.img")
+        bash(f"fallocate -l 8G eupnea-depthcharge.img")
     except subprocess.CalledProcessError:  # try fallocate, if it fails use dd
-        bash(f"dd if=/dev/zero of=depthboot.img status=progress bs=1024 count={8 * 1000000}")
+        bash(f"dd if=/dev/zero of=eupnea-depthcharge.img status=progress bs=1024 count={8 * 1000000}")
     print_status("Mounting empty image")
     img_mnt = bash("losetup -f --show eupnea-depthcharge.bin")
     if img_mnt == "":
