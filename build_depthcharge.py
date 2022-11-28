@@ -12,7 +12,7 @@ def process_args():
     parser.add_argument("--dev", dest="dev_build", default=False, help="Use latest dev build. May be unstable.")
     parser.add_argument("--stable", dest="stable", default=False, help="Use chromeos stable kernel.")
     parser.add_argument("--exp", dest="exp", default=False, help="Use chromeos experimental 5.15 kernel.")
-    parser.add_argument("--mainline-testing", dest="mainline-testing", default=False,
+    parser.add_argument("--mainline-testing", dest="mainline_testing", default=False,
                         help="Use mainline testing kernel.")
     return parser.parse_args()
 
