@@ -224,7 +224,7 @@ def compress_image(img_mnt: str) -> None:
 
 
 def chroot(command: str) -> None:
-    bash(f'chroot /mnt/eupnea-os /bin/sh -c "{command}"')  # always print output
+    bash(f'chroot /mnt/eupnea-os /bin/bash -c "{command}"')  # always print output
 
 
 if __name__ == "__main__":
