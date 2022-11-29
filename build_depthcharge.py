@@ -57,7 +57,6 @@ def prepare_image() -> str:
     # write PARTUUID to kernel flags and save it as a file
     with open(f"configs/kernel.flags", "r") as flags:
         temp_cmdline = flags.read().replace("insert_partuuid", rootfs_partuuid).strip()
-    # SELinux is temporarily disabled, until we can figure out how to relabel files without rebooting
     with open("kernel.flags", "w") as config:
         config.write(temp_cmdline)
 
@@ -201,6 +200,32 @@ def customize_kde() -> None:
     chroot("cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh")  # install global theme
 
 
+def relabel_files() -> None:
+    # Fedora requires all files to be relabled for SELinux to work
+    # If this is not done, SELinux will prevent users from logging in
+    print_status("Relabeling files for SELinux")
+
+    # copy /proc files needed for fixfiles
+    mkdir("/mnt/eupneaos/proc/self")
+    cpfile("configs/selinux/mounts", "/mnt/eupneaos/proc/self/mounts")
+    cpfile("configs/selinux/mountinfo", "/mnt/eupneaos/proc/self/mountinfo")
+
+    # copy /sys files needed for fixfiles
+    mkdir("/mnt/eupneaos/sys/fs/selinux/initial_contexts/", create_parents=True)
+    cpfile("configs/selinux/unlabeled", "/mnt/eupneaos/sys/fs/selinux/initial_contexts/unlabeled")
+
+    # Backup original selinux
+    cpfile("/mnt/eupneaos/usr/sbin/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles.bak")
+    # Copy patched fixfiles script
+    cpfile("configs/selinux/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles")
+
+    chroot("/sbin/fixfiles -T 0 restore")
+
+    # Restore original fixfiles
+    cpfile("/mnt/eupneaos/usr/sbin/fixfiles.bak", "/mnt/eupneaos/usr/sbin/fixfiles")
+    rmfile("/mnt/eupneaos/usr/sbin/fixfiles.bak")
+
+
 def compress_image(img_mnt: str) -> None:
     print_status("Shrinking image")
 
@@ -264,6 +289,7 @@ if __name__ == "__main__":
     bootstrap_rootfs()
     configure_rootfs()
     customize_kde()
+    relabel_files()
 
     # Unmount image to prevent tar error: "file changed as we read it"
     bash("umount -f /mnt/eupneaos")
