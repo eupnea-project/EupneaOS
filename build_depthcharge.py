@@ -289,6 +289,9 @@ if __name__ == "__main__":
     bootstrap_rootfs()
     configure_rootfs()
     customize_kde()
+
+    # delete resolv.conf to prevent issues with dns before relabeling
+    rmfile("/mnt/eupneaos/run/systemd/resolve/stub-resolv.conf")
     relabel_files()
 
     # Unmount image to prevent tar error: "file changed as we read it"
