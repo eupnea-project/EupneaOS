@@ -1,4 +1,4 @@
-name: Building + release depthcharge image
+name: Building + releasing depthcharge image
 on:
   push:
     branches:
