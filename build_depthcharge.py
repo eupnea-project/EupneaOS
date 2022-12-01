@@ -227,14 +227,8 @@ def relabel_files() -> None:
     rmfile("/mnt/eupneaos/usr/sbin/fixfiles.bak")
 
 
+# Shrink image to actual size
 def compress_image(img_mnt: str) -> None:
-    print_status("Shrinking image")
-
-    # Remove all tmp files
-    rmdir("/mnt/eupneaos/tmp/")
-    rmdir("/mnt/eupneaos/var/tmp/")
-
-    # Shrink image to actual size
     print_status("Shrinking image")
     bash(f"e2fsck -fpv {img_mnt}p3")  # Force check filesystem for errors
     bash(f"resize2fs -f -M {img_mnt}p3")
@@ -291,11 +285,16 @@ if __name__ == "__main__":
     configure_rootfs()
     customize_kde()
 
-    # delete resolv.conf to prevent issues with dns before relabeling
-    rmfile("/mnt/eupneaos/run/systemd/resolve/stub-resolv.conf")
-    relabel_files()
+    # Clean image of temporary files
+    rmdir("/mnt/eupneaos/tmp")
+    rmdir("/mnt/eupneaos/var/tmp")
+    rmdir("/mnt/eupneaos/run")
+    rmdir("/mnt/eupneaos/proc")
+    rmdir("/mnt/eupneaos/sys")
+    rmdir("/mnt/eupneaos/lost+found")
+    rmdir("/mnt/eupneaos/dev")
 
-    # Unmount image to prevent tar error: "file changed as we read it"
+    # Force unmount image
     bash("umount -f /mnt/eupneaos")
     sleep(5)  # wait for umount to finish
     compress_image(image_props)
