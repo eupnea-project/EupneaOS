@@ -10,7 +10,7 @@ jobs:
     steps:
       - if: startsWith(github.event.issue.title, '[AUDIO]')
         name: Close Issue
-        uses: peter-evans/close-issue@v2
+        uses: peter-evans/close-issue@v2.2.0
         with:
           close-reason: not_planned
           comment: |
