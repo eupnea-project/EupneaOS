@@ -2,6 +2,7 @@ name: Close audio issue
 on:
   issues:
     types: [opened]
+  workflow_dispatch:
 
 jobs:
   close-audio-issues:
