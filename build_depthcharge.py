@@ -288,7 +288,6 @@ if __name__ == "__main__":
     # Clean image of temporary files
     rmdir("/mnt/eupneaos/tmp")
     rmdir("/mnt/eupneaos/var/tmp")
-    rmdir("/mnt/eupneaos/run")
     rmdir("/mnt/eupneaos/proc")
     rmdir("/mnt/eupneaos/sys")
     rmdir("/mnt/eupneaos/lost+found")
