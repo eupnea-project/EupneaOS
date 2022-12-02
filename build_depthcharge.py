@@ -289,9 +289,12 @@ if __name__ == "__main__":
     rmdir("/mnt/eupneaos/tmp")
     rmdir("/mnt/eupneaos/var/tmp")
     rmdir("/mnt/eupneaos/proc")
+    rmdir("/mnt/eupneaos/run")
     rmdir("/mnt/eupneaos/sys")
     rmdir("/mnt/eupneaos/lost+found")
     rmdir("/mnt/eupneaos/dev")
+
+    relabel_files()
 
     # Force unmount image
     bash("umount -f /mnt/eupneaos")
