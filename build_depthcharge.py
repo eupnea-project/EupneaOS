@@ -203,6 +203,9 @@ def customize_kde() -> None:
     # run installer script from chroot
     chroot("cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh")  # install global theme
 
+    # apply global dark theme
+    chroot("lookandfeeltool --apply com.github.eupnea-linux.EupneaOS-dark")
+
 
 def relabel_files() -> None:
     # Fedora requires all files to be relabled for SELinux to work
