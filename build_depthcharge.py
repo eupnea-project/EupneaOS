@@ -176,6 +176,9 @@ def configure_rootfs() -> None:
     with open("/mnt/eupneaos/etc/systemd/sleep.conf", "a") as conf:
         conf.write("SuspendState=freeze\nHibernateState=freeze\n")
 
+    # systemd-resolved.service needed to create /etc/resolv.conf link. Not enabled by default for some reason
+    chroot("systemctl enable systemd-resolved")
+
 
 def customize_kde() -> None:
     # Install KDE
@@ -284,6 +287,7 @@ if __name__ == "__main__":
     bootstrap_rootfs()
     configure_rootfs()
     customize_kde()
+    relabel_files()
 
     # Clean image of temporary files
     rmdir("/mnt/eupneaos/tmp")
@@ -293,8 +297,6 @@ if __name__ == "__main__":
     rmdir("/mnt/eupneaos/sys")
     rmdir("/mnt/eupneaos/lost+found")
     rmdir("/mnt/eupneaos/dev")
-
-    relabel_files()
 
     # Force unmount image
     bash("umount -f /mnt/eupneaos")
