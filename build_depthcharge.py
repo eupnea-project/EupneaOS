@@ -185,10 +185,6 @@ def customize_kde() -> None:
     chroot("dnf group install -y 'KDE Plasma Workspaces'")
     # Set system to boot to gui
     chroot("systemctl set-default graphical.target")
-    # Add chromebook keyboard layout. Needs to be done after install Xorg
-    print_status("Backing up default keymap and setting Chromebook layout")
-    cpfile("/mnt/eupneaos/usr/share/X11/xkb/symbols/pc", "/mnt/eupneaos/usr/share/X11/xkb/symbols/pc.default")
-    cpfile("configs/xkb/xkb.chromebook", "/mnt/eupneaos/usr/share/X11/xkb/symbols/pc")
 
     # Set kde ui settings
     print_status("Setting General UI settings")
@@ -300,6 +296,7 @@ if __name__ == "__main__":
     rmdir("/mnt/eupneaos/sys")
     rmdir("/mnt/eupneaos/lost+found")
     rmdir("/mnt/eupneaos/dev")
+    rmfile("/mnt/eupneaos/.stop_progress")
 
     # Force unmount image
     bash("umount -f /mnt/eupneaos")
