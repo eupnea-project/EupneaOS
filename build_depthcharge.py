@@ -86,14 +86,19 @@ def bootstrap_rootfs() -> None:
 
     # TODO: Replace generic repos with own EupneaOS repos
     chroot("dnf install --releasever=37 --allowerasing -y generic-logos generic-release generic-release-common")
-    chroot("dnf group install -y 'Hardware Support'")
-    chroot("dnf group install -y 'Common NetworkManager Submodules'")
-    chroot("dnf install -y linux-firmware")
-    chroot("dnf install -y git vboot-utils rsync cloud-utils parted")  # postinstall dependencies
-
+    # Add eupnea repo
+    chroot("dnf config-manager --add-repo https://eupnea-linux.github.io/rpm-repo/eupnea.repo")
     # Add RPMFusion repos
     chroot(f"dnf install -y https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-37.noarch.rpm")
     chroot(f"dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-37.noarch.rpm")
+    chroot("dnf update --refresh -y")  # update repos
+    chroot("dnf upgrade -y")  # upgrade the whole system
+
+    # Install hardware support packages
+    chroot("dnf group install -y 'Hardware Support'")
+    chroot("dnf group install -y 'Common NetworkManager Submodules'")
+    chroot("dnf install -y linux-firmware")
+    chroot("dnf install -y eupnea-utils eupnea-system")  # install eupnea packages
 
 
 def configure_rootfs() -> None:
@@ -297,6 +302,8 @@ if __name__ == "__main__":
     rmdir("/mnt/eupneaos/lost+found")
     rmdir("/mnt/eupneaos/dev")
     rmfile("/mnt/eupneaos/.stop_progress")
+
+    bash("sync")  # write all pending changes to image
 
     # Force unmount image
     bash("umount -f /mnt/eupneaos")
