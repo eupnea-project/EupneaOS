@@ -50,8 +50,8 @@ jobs:
           name: eupneaos-depthcharge.bin.rar
           path: ./eupneaos-depthcharge.bin.rar
 
-      - name: Splitting tar archive
-        run: split --verbose -b 1900MB eupneaos-depthcharge.bin.tar.xz eupneaos-depthcharge.split.
+      #  - name: Splitting tar archive
+      #    run: split --verbose -b 1900MB eupneaos-depthcharge.bin.tar.xz eupneaos-depthcharge.split.
 
       - name: Generating release message
         id: tag
@@ -75,12 +75,13 @@ jobs:
             This is a development build of EupneaOS. Highly unstable!
             
             1. Download all release files
-            2. Combine files into tar: ``cat eupneaos-depthcharge.split.?? > eupneaos-depthcharge.bin.tar.xz``
+            ~~2. Combine files into tar: ``cat eupneaos-depthcharge.split.?? > eupneaos-depthcharge.bin.tar.xz``~~
             3. Extract eupneaos-depthcharge.bin.tar.xz
             4. Verify checksum of the image: ``sha256sum -c --ignore-missing eupneaos-depthcharge.sha256``
             5. Flash eupneaos-depthcharge.bin to usb/sd-card
             
             Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
           files: |
-            eupneaos-depthcharge.split.*
+            eupneaos-depthcharge.bin.tar.xz
             eupneaos-depthcharge.sha256
+          #  eupneaos-depthcharge.split.*
