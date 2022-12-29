@@ -201,7 +201,7 @@ def customize_kde() -> None:
     # Installer needs to be run from within chroot
     cpdir("eupneaos-theme", "/mnt/eupneaos/tmp/eupneaos-theme")
     # run installer script from chroot
-    bash('chroot /mnt/eupneaos /bin/bash -c "cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh')  # install global theme
+    bash('chroot /mnt/eupneaos /bin/bash -c "cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh"')  # install global theme
 
     # apply global dark theme
 
