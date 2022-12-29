@@ -289,6 +289,11 @@ if __name__ == "__main__":
 
     image_props = prepare_image()
     uuids = get_uuids(image_props)
+
+    # Bind mount directories
+    print_status("Bind-mounting directories")
+    bash("mount --bind /dev /mnt/eupneaos/dev")
+
     bootstrap_rootfs()
     configure_rootfs()
     customize_kde()
