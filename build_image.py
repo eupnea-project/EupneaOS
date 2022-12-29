@@ -294,6 +294,7 @@ if __name__ == "__main__":
     print_status("Bind-mounting directories")
     mkdir("/mnt/eupneaos/dev")
     bash("mount --rbind /dev /mnt/eupneaos/dev")
+    bash("mount --make-rslave /mnt/eupneaos/dev") 
 
     bootstrap_rootfs()
     configure_rootfs()
