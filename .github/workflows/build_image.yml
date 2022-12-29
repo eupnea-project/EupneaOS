@@ -13,6 +13,13 @@ jobs:
   build-release:
     runs-on: ubuntu-22.04
     steps:
+      - name: Maximizing build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 5120
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+
       - name: Checking out repository code
         uses: actions/checkout@v3
         with:
@@ -23,10 +30,7 @@ jobs:
 
       - name: Cloning git repositories
         run: |
-          git clone --depth=1 https://github.com/eupnea-linux/postinstall-scripts.git
-          git clone --depth=1 https://github.com/eupnea-linux/audio-scripts.git
           git clone --depth=1 https://github.com/eupnea-linux/eupneaos-theme.git
-          git clone --depth=1 https://github.com/eupnea-linux/systemd-services.git
           git clone --depth=1 https://chromium.googlesource.com/chromiumos/third_party/linux-firmware
 
       - name: Create temp directory
@@ -42,13 +46,13 @@ jobs:
         run: curl -L "https://github.com/eupnea-linux/fedora-rootfs/releases/latest/download/fedora-rootfs-37.tar.xz" -o /tmp/eupneaos-build/rootfs.tar.xz
 
       - name: Building image
-        run: sudo python3 build.py
+        run: sudo python3 build_image.py
 
-      - name: Uploading rar archive as artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: eupneaos.bin.rar
-          path: ./eupneaos.bin.rar
+      #      - name: Uploading rar archive as artifact
+      #        uses: actions/upload-artifact@v2
+      #        with:
+      #          name: eupneaos.bin.rar
+      #          path: ./eupneaos.bin.rar
 
       #  - name: Splitting tar archive
       #    run: split --verbose -b 1900MB eupneaos.bin.tar.xz eupneaos.split.

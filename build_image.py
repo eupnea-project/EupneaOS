@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# This script is cloud oriented, so it is not very user-friendly.
+# This script is cloud oriented, therefore it is not very user-friendly.
 
 import argparse
 import os
@@ -36,23 +36,23 @@ def prepare_image() -> str:
     # partition image
     print_status("Preparing device/image partition")
 
-    # format as per depthcharge requirements,
+    # format as per depthcharge requirements, but with a boot partition for uefi
     # READ: https://wiki.gentoo.org/wiki/Creating_bootable_media_for_depthcharge_based_devices
     bash(f"parted -s {img_mnt} mklabel gpt")
     bash(f"parted -s -a optimal {img_mnt} unit mib mkpart Kernel 1 65")  # kernel partition
     bash(f"parted -s -a optimal {img_mnt} unit mib mkpart Kernel 65 129")  # reserve kernel partition
-    bash(f"parted -s -a optimal {img_mnt} unit mib mkpart ESP 129 629") # EFI System Partition
+    bash(f"parted -s -a optimal {img_mnt} unit mib mkpart ESP 129 629")  # EFI System Partition
     bash(f"parted -s -a optimal {img_mnt} unit mib mkpart Root 629 100%")  # rootfs partition
-    bash(f"cgpt add -i 3 -t efi {img_mnt}") # Set ESP type to efi
     bash(f"cgpt add -i 1 -t kernel -S 1 -T 5 -P 15 {img_mnt}")  # set kernel flags
     bash(f"cgpt add -i 2 -t kernel -S 1 -T 5 -P 1 {img_mnt}")  # set backup kernel flags
+    bash(f"cgpt add -i 3 -t efi {img_mnt}")  # Set ESP type to efi
 
     print_status("Formatting rootfs part")
-    rootfs_mnt = img_mnt + "p3"  # third partition is rootfs
-    esp_mnt = img_mnt + "p3"
     # Format boot
+    esp_mnt = img_mnt + "p3"
     bash(f"yes 2>/dev/null | mkfs.vfat -F32 {esp_mnt}")  # 2>/dev/null is to supress yes broken pipe warning
     # Create rootfs ext4 partition
+    rootfs_mnt = img_mnt + "p4"
     bash(f"yes 2>/dev/null | mkfs.ext4 {rootfs_mnt}")  # 2>/dev/null is to supress yes broken pipe warning
     # Mount rootfs partition
     bash(f"mount {rootfs_mnt} /mnt/eupneaos")
@@ -70,26 +70,35 @@ def prepare_image() -> str:
 
     print_status("Partitioning complete")
     flash_kernel(f"{img_mnt}p1")
+    flash_kernel(f"{img_mnt}p2")  # flash reserve kernel
     return img_mnt
 
 
 def flash_kernel(kernel_part: str) -> None:
-    print_status("Flashing kernel to device/image")
+    print_status("Flashing kernel to image")
     # Sign kernel
     bash("futility vbutil_kernel --arch x86_64 --version 1 --keyblock /usr/share/vboot/devkeys/kernel.keyblock"
          + " --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk --bootloader kernel.flags" +
          " --config kernel.flags --vmlinuz /tmp/eupneaos-build/bzImage --pack /tmp/eupneaos-build/bzImage.signed")
     bash(f"dd if=/tmp/eupneaos-build/bzImage.signed of={kernel_part}")  # part 1 is the kernel partition
-    cpfile("/tmp/eupneaos-build/bzImage", "/mnt/eupneaos/boot/vmlinuz-eupnea") # Copy kernel to /boot for uefi
+    cpfile("/tmp/eupneaos-build/bzImage", "/mnt/eupneaos/boot/vmlinuz-eupnea")  # Copy kernel to /boot for uefi
 
     print_status("Kernel flashed successfully")
+
+
+def get_uuids(img_mnt: str) -> list:
+    bootpart = img_mnt + "p3"
+    rootpart = img_mnt + "p4"
+    bootuuid = bash(f"blkid -o value -s PARTUUID {bootpart}")
+    rootuuid = bash(f"blkid -o value -s PARTUUID {rootpart}")
+    return [bootuuid, rootuuid]
 
 
 # Make a bootable rootfs
 def bootstrap_rootfs() -> None:
     bash("tar xfp /tmp/eupneaos-build/rootfs.tar.xz -C /mnt/eupneaos --checkpoint=.10000")
     # Create a temporary resolv.conf for internet inside the chroot
-    mkdir("/mnt/eupneaos/run/systemd/resolve", create_parents=True)  # dir doesnt exist coz systemd didnt run
+    mkdir("/mnt/eupneaos/run/systemd/resolve", create_parents=True)  # dir doesnt exist coz systemd didn't run
     cpfile("/etc/resolv.conf",
            "/mnt/eupneaos/run/systemd/resolve/stub-resolv.conf")  # copy hosts resolv.conf to chroot
 
@@ -109,14 +118,6 @@ def bootstrap_rootfs() -> None:
     chroot("dnf install -y linux-firmware")
     chroot("dnf install -y eupnea-utils eupnea-system")  # install eupnea packages
 
-
-def get_uuids(img_mnt: None) -> list:
-    bootpart = img_mnt + "p3"
-    rootpart = img_mnt + "p4"
-    bootuuid = bash(f"blkid -o value -s PARTUUID {bootpart}")
-    rootuuid = bash(f"blkid -o value -s PARTUUID {rootpart}")
-    uuids = [bootuuid, rootuuid]
-    return uuids
 
 def configure_rootfs() -> None:
     # Extract kernel modules
@@ -154,42 +155,8 @@ def configure_rootfs() -> None:
     with open("/mnt/eupneaos/etc/sddm.conf", "a") as sddm_conf:
         sddm_conf.write("\n[Autologin]\nUser=liveuser\nSession=plasma.desktop\n")
 
-    print_status("Copying eupnea scripts and configs")
-    # Copy postinstall scripts
-    for file in Path("postinstall-scripts").iterdir():
-        if file.is_file():
-            if file.name == "LICENSE" or file.name == "README.md" or file.name == ".gitignore":
-                continue  # dont copy license, readme and gitignore
-            else:
-                cpfile(file.absolute().as_posix(), f"/mnt/eupneaos/usr/local/bin/{file.name}")
-
-    # copy audio setup script
-    cpfile("audio-scripts/setup-audio", "/mnt/eupneaos/usr/local/bin/setup-audio")
-
-    # copy functions file
-    cpfile("functions.py", "/mnt/eupneaos/usr/local/bin/functions.py")
-    chroot("chmod 755 /usr/local/bin/*")  # make scripts executable in system
-
-    # copy configs
-    mkdir("/mnt/eupneaos/etc/eupnea")
-    cpdir("configs", "/mnt/eupneaos/etc/eupnea")  # eupnea general configs
-    cpdir("postinstall-scripts/configs", "/mnt/eupneaos/etc/eupnea")  # postinstall configs
-    cpdir("audio-scripts/configs", "/mnt/eupneaos/etc/eupnea")  # audio configs
-
-    # copy preset eupnea settings file for postinstall scripts to read
+    # copy preset eupnea settings file for postinstall scripts
     cpfile("configs/eupnea.json", "/mnt/eupneaos/etc/eupnea.json")
-
-    # Install systemd services
-    print_status("Installing systemd services")
-    # Copy postinstall scripts
-    for file in Path("systemd-services").iterdir():
-        if file.is_file():
-            if file.name == "LICENSE" or file.name == "README.md" or file.name == ".gitignore":
-                continue  # dont copy license, readme and gitignore
-            else:
-                cpfile(file.absolute().as_posix(), f"/mnt/eupneaos/etc/systemd/system/{file.name}")
-    chroot("systemctl enable eupnea-postinstall.service")
-    chroot("systemctl enable eupnea-update.timer")
 
     print_status("Fixing sleep")
     # disable hibernation aka S4 sleep, READ: https://eupnea-linux.github.io/main.html#/pages/bootlock
@@ -202,8 +169,6 @@ def configure_rootfs() -> None:
     chroot("systemctl enable systemd-resolved")
 
     # Append lines to fstab
-    #with open("/mnt/eupneaos/etc/fstab", "r") as fstab:
-    #    oldfstab = fstab
     with open("/mnt/eupneaos/etc/fstab", "a") as fstab:
         fstab.write(f"UUID={uuids[1]} / ext4 rw,relatime 0 1")
 
@@ -242,7 +207,7 @@ def customize_kde() -> None:
 
 
 def relabel_files() -> None:
-    # Fedora requires all files to be relabled for SELinux to work
+    # Fedora requires all files to be relabeled for SELinux to work
     # If this is not done, SELinux will prevent users from logging in
     print_status("Relabeling files for SELinux")
 
@@ -270,13 +235,15 @@ def relabel_files() -> None:
 # Shrink image to actual size
 def compress_image(img_mnt: str) -> None:
     print_status("Shrinking image")
-    bash(f"e2fsck -fpv {img_mnt}p3")  # Force check filesystem for errors
-    bash(f"resize2fs -f -M {img_mnt}p3")
+    bash(f"e2fsck -fpv {img_mnt}p4")  # Force check filesystem for errors
+    bash(f"resize2fs -f -M {img_mnt}p4")
     block_count = int(bash(f"dumpe2fs -h {img_mnt}p3 | grep 'Block count:'")[12:].split()[0])
     actual_fs_in_bytes = block_count * 4096
     # the kernel part is always the same size -> sector amount: 131072 * 512 => 67108864 bytes
     # There are 2 kernel partitions -> 67108864 bytes * 2 = 134217728 bytes
     actual_fs_in_bytes += 134217728
+    # EFI partition is always the same size -> sector amount: 1024000 * 512 => 524288000 bytes
+    actual_fs_in_bytes += 524288000
     actual_fs_in_bytes += 20971520  # add 20mb for linux to be able to boot properly
     bash(f"truncate --size={actual_fs_in_bytes} ./eupneaos.bin")
 
