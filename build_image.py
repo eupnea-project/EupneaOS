@@ -237,7 +237,7 @@ def compress_image(img_mnt: str) -> None:
     print_status("Shrinking image")
     bash(f"e2fsck -fpv {img_mnt}p4")  # Force check filesystem for errors
     bash(f"resize2fs -f -M {img_mnt}p4")
-    block_count = int(bash(f"dumpe2fs -h {img_mnt}p3 | grep 'Block count:'")[12:].split()[0])
+    block_count = int(bash(f"dumpe2fs -h {img_mnt}p4 | grep 'Block count:'")[12:].split()[0])
     actual_fs_in_bytes = block_count * 4096
     # the kernel part is always the same size -> sector amount: 131072 * 512 => 67108864 bytes
     # There are 2 kernel partitions -> 67108864 bytes * 2 = 134217728 bytes
