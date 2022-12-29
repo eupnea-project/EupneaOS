@@ -263,7 +263,8 @@ def compress_image(img_mnt: str) -> None:
 
 
 def chroot(command: str) -> None:
-    bash(f'chroot /mnt/eupneaos /bin/bash -c "{command}"')  # always print output
+    # bash(f'chroot /mnt/eupneaos /bin/bash -c "{command}"')  # always print output
+    bash(f'arch-chroot /mnt/eupneaos bash -c "{command}"')
 
 
 if __name__ == "__main__":
@@ -290,11 +291,11 @@ if __name__ == "__main__":
     image_props = prepare_image()
     uuids = get_uuids(image_props)
 
-    # Bind mount directories
-    print_status("Bind-mounting directories")
-    mkdir("/mnt/eupneaos/dev")
-    bash("mount --rbind /dev /mnt/eupneaos/dev")
-    bash("mount --make-rslave /mnt/eupneaos/dev") 
+    # # Bind mount directories
+    # print_status("Bind-mounting directories")
+    # mkdir("/mnt/eupneaos/dev")
+    # bash("mount --rbind /dev /mnt/eupneaos/dev")
+    # bash("mount --make-rslave /mnt/eupneaos/dev")
 
     bootstrap_rootfs()
     configure_rootfs()
