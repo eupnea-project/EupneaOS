@@ -293,7 +293,7 @@ if __name__ == "__main__":
     # Bind mount directories
     print_status("Bind-mounting directories")
     mkdir("/mnt/eupneaos/dev")
-    bash("mount --bind /dev /mnt/eupneaos/dev")
+    bash("mount --rbind /dev /mnt/eupneaos/dev")
 
     bootstrap_rootfs()
     configure_rootfs()
