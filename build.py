@@ -24,11 +24,11 @@ def prepare_image() -> str:
     print_status("Preparing image")
 
     try:
-        bash(f"fallocate -l 10G eupneaos-depthcharge.bin")
+        bash(f"fallocate -l 10G eupneaos.bin")
     except subprocess.CalledProcessError:  # try fallocate, if it fails use dd
-        bash(f"dd if=/dev/zero of=eupneaos-depthcharge.bin status=progress bs=1024 count={10 * 1000000}")
+        bash(f"dd if=/dev/zero of=eupneaos.bin status=progress bs=1024 count={10 * 1000000}")
     print_status("Mounting empty image")
-    img_mnt = bash("losetup -f --show eupneaos-depthcharge.bin")
+    img_mnt = bash("losetup -f --show eupneaos.bin")
     if img_mnt == "":
         print_error("Failed to mount image")
         exit(1)
@@ -41,16 +41,24 @@ def prepare_image() -> str:
     bash(f"parted -s {img_mnt} mklabel gpt")
     bash(f"parted -s -a optimal {img_mnt} unit mib mkpart Kernel 1 65")  # kernel partition
     bash(f"parted -s -a optimal {img_mnt} unit mib mkpart Kernel 65 129")  # reserve kernel partition
-    bash(f"parted -s -a optimal {img_mnt} unit mib mkpart Root 129 100%")  # rootfs partition
+    bash(f"parted -s -a optimal {img_mnt} unit mib mkpart ESP 129 629") # EFI System Partition
+    bash(f"parted -s -a optimal {img_mnt} unit mib mkpart Root 629 100%")  # rootfs partition
+    bash(f"cgpt add -i 3 -t efi {img_mnt}") # Set ESP type to efi
     bash(f"cgpt add -i 1 -t kernel -S 1 -T 5 -P 15 {img_mnt}")  # set kernel flags
     bash(f"cgpt add -i 2 -t kernel -S 1 -T 5 -P 1 {img_mnt}")  # set backup kernel flags
 
     print_status("Formatting rootfs part")
     rootfs_mnt = img_mnt + "p3"  # third partition is rootfs
+    esp_mnt = img_mnt + "p3"
+    # Format boot
+    bash(f"yes 2>/dev/null | mkfs.vfat -F32 {esp_mnt}")  # 2>/dev/null is to supress yes broken pipe warning
     # Create rootfs ext4 partition
     bash(f"yes 2>/dev/null | mkfs.ext4 {rootfs_mnt}")  # 2>/dev/null is to supress yes broken pipe warning
     # Mount rootfs partition
     bash(f"mount {rootfs_mnt} /mnt/eupneaos")
+    # Mount esp
+    bash("mkdir -p /mnt/eupneaos/boot")
+    bash(f"mount {esp_mnt} /mnt/eupneaos/boot")
 
     # get uuid of rootfs partition
     rootfs_partuuid = bash(f"blkid -o value -s PARTUUID {rootfs_mnt}")
@@ -72,6 +80,7 @@ def flash_kernel(kernel_part: str) -> None:
          + " --signprivate /usr/share/vboot/devkeys/kernel_data_key.vbprivk --bootloader kernel.flags" +
          " --config kernel.flags --vmlinuz /tmp/eupneaos-build/bzImage --pack /tmp/eupneaos-build/bzImage.signed")
     bash(f"dd if=/tmp/eupneaos-build/bzImage.signed of={kernel_part}")  # part 1 is the kernel partition
+    cpfile("/tmp/eupneaos-build/bzImage", "/mnt/eupneaos/boot/vmlinuz-eupnea") # Copy kernel to /boot for uefi
 
     print_status("Kernel flashed successfully")
 
@@ -100,6 +109,14 @@ def bootstrap_rootfs() -> None:
     chroot("dnf install -y linux-firmware")
     chroot("dnf install -y eupnea-utils eupnea-system")  # install eupnea packages
 
+
+def get_uuids(img_mnt: None) -> list:
+    bootpart = img_mnt + "p3"
+    rootpart = img_mnt + "p4"
+    bootuuid = bash(f"blkid -o value -s PARTUUID {bootpart}")
+    rootuuid = bash(f"blkid -o value -s PARTUUID {rootpart}")
+    uuids = [bootuuid, rootuuid]
+    return uuids
 
 def configure_rootfs() -> None:
     # Extract kernel modules
@@ -184,6 +201,23 @@ def configure_rootfs() -> None:
     # systemd-resolved.service needed to create /etc/resolv.conf link. Not enabled by default for some reason
     chroot("systemctl enable systemd-resolved")
 
+    # Append lines to fstab
+    #with open("/mnt/eupneaos/etc/fstab", "r") as fstab:
+    #    oldfstab = fstab
+    with open("/mnt/eupneaos/etc/fstab", "a") as fstab:
+        fstab.write(f"UUID={uuids[1]} / ext4 rw,relatime 0 1")
+
+    # Install systemd-bootd
+    chroot("bootctl install --esp-path=/boot")
+    # Configure loader
+    with open(f"configs/sysdboot-eupnea.conf", "r") as conf:
+        temp_conf = conf.read().replace("insert_partuuid", uuids[1])
+    with open(f"configs/sysdboot-eupnea.conf", "w") as conf:
+        conf.write(temp_conf)
+    cpfile("configs/sysdboot-eupnea.conf", "/mnt/eupneaos/boot/loader/entries/eupnea.conf")
+    with open("/mnt/eupneaos/boot/loader/loader.conf", "w") as conf:
+        conf.write("default eupnea")
+
 
 def customize_kde() -> None:
     # Install KDE
@@ -244,21 +278,21 @@ def compress_image(img_mnt: str) -> None:
     # There are 2 kernel partitions -> 67108864 bytes * 2 = 134217728 bytes
     actual_fs_in_bytes += 134217728
     actual_fs_in_bytes += 20971520  # add 20mb for linux to be able to boot properly
-    bash(f"truncate --size={actual_fs_in_bytes} ./eupneaos-depthcharge.bin")
+    bash(f"truncate --size={actual_fs_in_bytes} ./eupneaos.bin")
 
     # compress image to tar. Tars are smaller but the native file manager on chromeos cant uncompress them
     # These are stored as backups in the GitHub releases
-    bash("tar -cv -I 'xz -9 -T0' -f ./eupneaos-depthcharge.bin.tar.xz ./eupneaos-depthcharge.bin")
+    bash("tar -cv -I 'xz -9 -T0' -f ./eupneaos.bin.tar.xz ./eupneaos.bin")
 
     # Rar archives are bigger, but natively supported by the ChromeOS file manager
     # These are uploaded as artifacts and then manually uploaded to a cloud storage
-    bash("rar a eupneaos-depthcharge.bin.rar -m5 eupneaos-depthcharge.bin")
+    bash("rar a eupneaos.bin.rar -m5 eupneaos.bin")
 
     print_status("Calculating sha256sums")
     # Calculate sha256sum sums
-    with open("eupneaos-depthcharge.sha256", "w") as file:
-        file.write(bash("sha256sum eupneaos-depthcharge.bin eupneaos-depthcharge.bin.tar.xz "
-                        "eupneaos-depthcharge.bin.rar"))
+    with open("eupneaos.sha256", "w") as file:
+        file.write(bash("sha256sum eupneaos.bin eupneaos.bin.tar.xz "
+                        "eupneaos.bin.rar"))
 
 
 def chroot(command: str) -> None:
@@ -287,6 +321,7 @@ if __name__ == "__main__":
     mkdir("/mnt/eupneaos", create_parents=True)
 
     image_props = prepare_image()
+    uuids = get_uuids(image_props)
     bootstrap_rootfs()
     configure_rootfs()
     customize_kde()
@@ -306,6 +341,7 @@ if __name__ == "__main__":
     bash("sync")  # write all pending changes to image
 
     # Force unmount image
+    bash("umount -f /mnt/eupneaos/boot")
     bash("umount -f /mnt/eupneaos")
     sleep(5)  # wait for umount to finish
     compress_image(image_props)
