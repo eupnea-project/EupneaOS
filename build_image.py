@@ -201,7 +201,8 @@ def customize_kde() -> None:
     # Installer needs to be run from within chroot
     cpdir("eupneaos-theme", "/mnt/eupneaos/tmp/eupneaos-theme")
     # run installer script from chroot
-    bash('chroot /mnt/eupneaos /bin/bash -c "cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh"')  # install global theme
+    bash(
+        'chroot /mnt/eupneaos /bin/bash -c "cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh"')  # install global theme
 
     # apply global dark theme
 
@@ -300,6 +301,9 @@ if __name__ == "__main__":
     bootstrap_rootfs()
     configure_rootfs()
     customize_kde()
+
+    # unmount boot before relabeling
+    bash("umount -f /mnt/eupneaos/boot")
     relabel_files()
 
     # Clean image of temporary files
@@ -316,7 +320,6 @@ if __name__ == "__main__":
     bash("sync")  # write all pending changes to image
 
     # Force unmount image
-    bash("umount -f /mnt/eupneaos/boot")
     bash("umount -f /mnt/eupneaos")
     sleep(5)  # wait for umount to finish
     compress_image(image_props)
