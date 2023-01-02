@@ -217,9 +217,9 @@ def relabel_files() -> None:
     cpfile("configs/selinux/mounts", "/mnt/eupneaos/proc/self/mounts")
     open("/mnt/eupneaos/proc/self/mountinfo", "w").close()  # create empty /proc/self/mountinfo
 
-    # # copy /sys files needed for fixfiles
-    # mkdir("/mnt/eupneaos/sys/fs/selinux/initial_contexts/", create_parents=True)
-    # cpfile("configs/selinux/unlabeled", "/mnt/eupneaos/sys/fs/selinux/initial_contexts/unlabeled")
+    # copy /sys files needed for fixfiles
+    mkdir("/mnt/eupneaos/sys/fs/selinux/initial_contexts/", create_parents=True)
+    cpfile("configs/selinux/unlabeled", "/mnt/eupneaos/sys/fs/selinux/initial_contexts/unlabeled")
 
     # # Backup original selinux
     # cpfile("/mnt/eupneaos/usr/sbin/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles.bak")
