@@ -200,9 +200,8 @@ def customize_kde() -> None:
     print_status("Installing global kde theme")
     # Installer needs to be run from within chroot
     cpdir("eupneaos-theme", "/mnt/eupneaos/tmp/eupneaos-theme")
-    # run installer script from chroot
-    bash(
-        'chroot /mnt/eupneaos /bin/bash -c "cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh"')  # install global theme
+    # run installer script for global kde theme from chroot
+    bash('chroot /mnt/eupneaos /bin/bash -c "cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh"')
 
     # apply global dark theme
 
@@ -215,18 +214,18 @@ def relabel_files() -> None:
     # copy /proc files needed for fixfiles
     mkdir("/mnt/eupneaos/proc/self")
     cpfile("configs/selinux/mounts", "/mnt/eupneaos/proc/self/mounts")
-    cpfile("configs/selinux/mountinfo", "/mnt/eupneaos/proc/self/mountinfo")
+    open("/mnt/eupneaos/proc/self/mountinfo", "w").close()  # create empty /proc/self/mountinfo
 
-    # copy /sys files needed for fixfiles
-    mkdir("/mnt/eupneaos/sys/fs/selinux/initial_contexts/", create_parents=True)
-    cpfile("configs/selinux/unlabeled", "/mnt/eupneaos/sys/fs/selinux/initial_contexts/unlabeled")
+    # # copy /sys files needed for fixfiles
+    # mkdir("/mnt/eupneaos/sys/fs/selinux/initial_contexts/", create_parents=True)
+    # cpfile("configs/selinux/unlabeled", "/mnt/eupneaos/sys/fs/selinux/initial_contexts/unlabeled")
 
-    # Backup original selinux
-    cpfile("/mnt/eupneaos/usr/sbin/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles.bak")
-    # Copy patched fixfiles script
-    cpfile("configs/selinux/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles")
+    # # Backup original selinux
+    # cpfile("/mnt/eupneaos/usr/sbin/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles.bak")
+    # # Copy patched fixfiles script
+    # cpfile("configs/selinux/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles")
 
-    chroot("/sbin/fixfiles -T 0 restore")
+    chroot("/sbin/fixfiles restore")
 
     # Restore original fixfiles
     cpfile("/mnt/eupneaos/usr/sbin/fixfiles.bak", "/mnt/eupneaos/usr/sbin/fixfiles")
