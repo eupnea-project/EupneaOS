@@ -218,17 +218,17 @@ def relabel_files() -> None:
     open("/mnt/eupneaos/proc/self/mountinfo", "w").close()  # create empty /proc/self/mountinfo
 
     # copy /sys files needed for fixfiles
-    mkdir("/mnt/eupneaos/sys/fs/selinux/initial_contexts/", create_parents=True)
-    cpfile("configs/selinux/unlabeled", "/mnt/eupneaos/sys/fs/selinux/initial_contexts/unlabeled")
+   # mkdir("/mnt/eupneaos/sys/fs/selinux/initial_contexts/", create_parents=True)
+    #cpfile("configs/selinux/unlabeled", "/mnt/eupneaos/sys/fs/selinux/initial_contexts/unlabeled")
 
-    # # Backup original selinux
-    # cpfile("/mnt/eupneaos/usr/sbin/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles.bak")
-    # # Copy patched fixfiles script
-    # cpfile("configs/selinux/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles")
+    # Backup original selinux
+    cpfile("/mnt/eupneaos/usr/sbin/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles.bak")
+    # Copy patched fixfiles script
+    cpfile("configs/selinux/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles")
 
     chroot("/sbin/fixfiles restore")
 
-    # Restore original fixfiles
+    # Restore original fixfiles script
     cpfile("/mnt/eupneaos/usr/sbin/fixfiles.bak", "/mnt/eupneaos/usr/sbin/fixfiles")
     rmfile("/mnt/eupneaos/usr/sbin/fixfiles.bak")
 
