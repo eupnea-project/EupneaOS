@@ -173,7 +173,8 @@ def configure_rootfs() -> None:
         fstab.write(f"UUID={uuids[1]} / ext4 rw,relatime 0 1")
 
     # Install systemd-bootd
-    chroot("bootctl install --esp-path=/boot")
+    # bootctl needs some paths mounted, arch-chroot does that automatically
+    bash(f'arch-chroot /mnt/eupneaos bash -c "bootctl install --esp-path=/boot"')
     # Configure loader
     with open(f"configs/sysdboot-eupnea.conf", "r") as conf:
         temp_conf = conf.read().replace("insert_partuuid", uuids[1])
@@ -201,7 +202,7 @@ def customize_kde() -> None:
     # Installer needs to be run from within chroot
     cpdir("eupneaos-theme", "/mnt/eupneaos/tmp/eupneaos-theme")
     # run installer script for global kde theme from chroot
-    bash('chroot /mnt/eupneaos /bin/bash -c "cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh"')
+    bash("cd /tmp/eupneaos-theme && bash /tmp/eupneaos-theme/install.sh")
 
     # apply global dark theme
 
@@ -263,8 +264,7 @@ def compress_image(img_mnt: str) -> None:
 
 
 def chroot(command: str) -> None:
-    # bash(f'chroot /mnt/eupneaos /bin/bash -c "{command}"')  # always print output
-    bash(f'arch-chroot /mnt/eupneaos bash -c "{command}"')
+    bash(f'chroot /mnt/eupneaos /bin/bash -c "{command}"')  # always print output
 
 
 if __name__ == "__main__":
