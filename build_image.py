@@ -165,6 +165,9 @@ def configure_rootfs() -> None:
     with open("/mnt/eupneaos/etc/systemd/sleep.conf", "a") as conf:
         conf.write("SuspendState=freeze\nHibernateState=freeze\n")
 
+    # Remove stock fedora kernel
+    chroot("dnf remove kernel -y")
+
     # systemd-resolved.service needed to create /etc/resolv.conf link. Not enabled by default for some reason
     chroot("systemctl enable systemd-resolved")
 
