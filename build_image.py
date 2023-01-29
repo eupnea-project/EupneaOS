@@ -118,19 +118,9 @@ def configure_rootfs() -> None:
     bash("tar xpf /tmp/eupneaos-build/modules.tar.xz -C /mnt/eupneaos/lib/modules/ --checkpoint=.10000")
     print("")  # break line after tar
 
-    # Enable loading modules needed for eupnea
-    cpfile("configs/eupnea-modules.conf", "/mnt/eupneaos/etc/modules-load.d/eupnea-modules.conf")
-
     # Extract kernel headers
     print_status("Extracting kernel headers")
-    dir_kernel_version = bash("ls /mnt/eupneaos/lib/modules/").strip()  # get modules dir name
-    rmdir(f"/mnt/eupneaos/usr/src/linux-headers-{dir_kernel_version}", keep_dir=False)  # remove old headers
-    mkdir(f"/mnt/eupneaos/usr/src/linux-headers-{dir_kernel_version}", create_parents=True)
-    bash(f"tar xpf /tmp/eupneaos-build/headers.tar.xz -C /mnt/eupneaos/usr/src/linux-headers-{dir_kernel_version}/ "
-         f"--checkpoint=.10000")
-    print("")  # break line after tar
-    chroot(f"ln -s /usr/src/linux-headers-{dir_kernel_version}/ "
-           f"/lib/modules/{dir_kernel_version}/build")  # use chroot for correct symlink
+    extract_file("/tmp/eupneaos-build/headers.tar.xz", "/mnt/eupneaos//usr/src")
 
     # copy previously downloaded firmware
     print_status("Copying google firmware")
@@ -267,15 +257,9 @@ if __name__ == "__main__":
     kernel_type = "mainline"
     if args.dev_build:
         print_warning("Using dev release")
-    if args.exp:
-        print_warning("Using experimental chromeos kernel")
-        kernel_type = "exp"
     if args.stable:
         print_warning("Using stable chromes kernel")
         kernel_type = "stable"
-    if args.mainline_testing:
-        print_warning("Using mainline testing kernel")
-        kernel_type = "mainline-testing"
 
     # prepare mount
     mkdir("/mnt/eupneaos", create_parents=True)
