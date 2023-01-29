@@ -2,8 +2,6 @@
 # This script is cloud oriented, therefore it is not very user-friendly.
 
 import argparse
-import os
-import sys
 
 from functions import *
 
@@ -12,10 +10,7 @@ from functions import *
 def process_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dev", dest="dev_build", default=False, help="Use latest dev build. May be unstable.")
-    parser.add_argument("--stable", dest="stable", default=False, help="Use chromeos stable kernel.")
-    parser.add_argument("--exp", dest="exp", default=False, help="Use chromeos experimental 5.15 kernel.")
-    parser.add_argument("--mainline-testing", dest="mainline_testing", default=False,
-                        help="Use mainline testing kernel.")
+    parser.add_argument("--chromeos", dest="stable", default=False, help="Use chromeos stable kernel.")
     return parser.parse_args()
 
 
@@ -24,7 +19,7 @@ def prepare_image() -> str:
     print_status("Preparing image")
 
     try:
-        bash(f"fallocate -l 10G eupneaos.bin")
+        bash("fallocate -l 10G eupneaos.bin")
     except subprocess.CalledProcessError:  # try fallocate, if it fails use dd
         bash(f"dd if=/dev/zero of=eupneaos.bin status=progress bs=1024 count={10 * 1000000}")
     print_status("Mounting empty image")
@@ -49,21 +44,19 @@ def prepare_image() -> str:
 
     print_status("Formatting rootfs part")
     # Format boot
-    esp_mnt = img_mnt + "p3"
-    bash(f"yes 2>/dev/null | mkfs.vfat -F32 {esp_mnt}")  # 2>/dev/null is to supress yes broken pipe warning
+    bash(f"yes 2>/dev/null | mkfs.vfat -F32 {img_mnt}p3")  # 2>/dev/null is to supress yes broken pipe warning
     # Create rootfs ext4 partition
-    rootfs_mnt = img_mnt + "p4"
-    bash(f"yes 2>/dev/null | mkfs.ext4 {rootfs_mnt}")  # 2>/dev/null is to supress yes broken pipe warning
+    bash(f"yes 2>/dev/null | mkfs.ext4 {img_mnt}p4")  # 2>/dev/null is to supress yes broken pipe warning
     # Mount rootfs partition
-    bash(f"mount {rootfs_mnt} /mnt/eupneaos")
+    bash(f"mount {img_mnt}p4 /mnt/eupneaos")
     # Mount esp
     bash("mkdir -p /mnt/eupneaos/boot")
-    bash(f"mount {esp_mnt} /mnt/eupneaos/boot")
+    bash(f"mount {img_mnt}p3 /mnt/eupneaos/boot")
 
     # get uuid of rootfs partition
-    rootfs_partuuid = bash(f"blkid -o value -s PARTUUID {rootfs_mnt}")
+    rootfs_partuuid = bash(f"blkid -o value -s PARTUUID {img_mnt}p4")
     # write PARTUUID to kernel flags and save it as a file
-    with open(f"configs/kernel.flags", "r") as flags:
+    with open("configs/kernel.flags", "r") as flags:
         temp_cmdline = flags.read().replace("insert_partuuid", rootfs_partuuid).strip()
     with open("kernel.flags", "w") as config:
         config.write(temp_cmdline)
@@ -87,10 +80,8 @@ def flash_kernel(kernel_part: str) -> None:
 
 
 def get_uuids(img_mnt: str) -> list:
-    bootpart = img_mnt + "p3"
-    rootpart = img_mnt + "p4"
-    bootuuid = bash(f"blkid -o value -s PARTUUID {bootpart}")
-    rootuuid = bash(f"blkid -o value -s PARTUUID {rootpart}")
+    bootuuid = bash(f"blkid -o value -s PARTUUID {img_mnt}p3")
+    rootuuid = bash(f"blkid -o value -s PARTUUID {img_mnt}p4")
     return [bootuuid, rootuuid]
 
 
@@ -107,8 +98,8 @@ def bootstrap_rootfs() -> None:
     # Add eupnea repo
     chroot("dnf config-manager --add-repo https://eupnea-linux.github.io/rpm-repo/eupnea.repo")
     # Add RPMFusion repos
-    chroot(f"dnf install -y https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-37.noarch.rpm")
-    chroot(f"dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-37.noarch.rpm")
+    chroot("dnf install -y https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-37.noarch.rpm")
+    chroot("dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-37.noarch.rpm")
     chroot("dnf update --refresh -y")  # update repos
     chroot("dnf upgrade -y")  # upgrade the whole system
 
@@ -124,7 +115,7 @@ def configure_rootfs() -> None:
     print_status("Extracting kernel modules")
     rmdir("/mnt/eupneaos/lib/modules")  # remove all old modules
     mkdir("/mnt/eupneaos/lib/modules")
-    bash(f"tar xpf /tmp/eupneaos-build/modules.tar.xz -C /mnt/eupneaos/lib/modules/ --checkpoint=.10000")
+    bash("tar xpf /tmp/eupneaos-build/modules.tar.xz -C /mnt/eupneaos/lib/modules/ --checkpoint=.10000")
     print("")  # break line after tar
 
     # Enable loading modules needed for eupnea
@@ -132,7 +123,7 @@ def configure_rootfs() -> None:
 
     # Extract kernel headers
     print_status("Extracting kernel headers")
-    dir_kernel_version = bash(f"ls /mnt/eupneaos/lib/modules/").strip()  # get modules dir name
+    dir_kernel_version = bash("ls /mnt/eupneaos/lib/modules/").strip()  # get modules dir name
     rmdir(f"/mnt/eupneaos/usr/src/linux-headers-{dir_kernel_version}", keep_dir=False)  # remove old headers
     mkdir(f"/mnt/eupneaos/usr/src/linux-headers-{dir_kernel_version}", create_parents=True)
     bash(f"tar xpf /tmp/eupneaos-build/headers.tar.xz -C /mnt/eupneaos/usr/src/linux-headers-{dir_kernel_version}/ "
@@ -143,14 +134,12 @@ def configure_rootfs() -> None:
 
     # copy previously downloaded firmware
     print_status("Copying google firmware")
-    start_progress(force_show=True)  # start fake progress
     cpdir("linux-firmware", "/mnt/eupneaos/lib/firmware")
-    stop_progress(force_show=True)  # stop fake progress
 
     print_status("Configuring liveuser")
     chroot("useradd --create-home --shell /bin/bash liveuser")  # add user
     chroot("usermod -aG wheel liveuser")  # add user to wheel
-    chroot(f'echo "liveuser:eupneaos" | chpasswd')  # set password to eupneaos
+    chroot('echo "liveuser:eupneaos" | chpasswd')  # set password to eupneaos
     # set up automatic login on boot for temp-user
     with open("/mnt/eupneaos/etc/sddm.conf", "a") as sddm_conf:
         sddm_conf.write("\n[Autologin]\nUser=liveuser\nSession=plasma.desktop\n")
@@ -173,15 +162,15 @@ def configure_rootfs() -> None:
 
     # Append lines to fstab
     with open("/mnt/eupneaos/etc/fstab", "a") as fstab:
-        fstab.write(f"UUID={uuids[1]} / ext4 rw,relatime 0 1")
+        fstab.write(f"PARTUUID={uuids[1]} / ext4 rw,relatime 0 1")
 
     # Install systemd-bootd
     # bootctl needs some paths mounted, arch-chroot does that automatically
-    bash(f'arch-chroot /mnt/eupneaos bash -c "bootctl install --esp-path=/boot"')
+    bash('arch-chroot /mnt/eupneaos bash -c "bootctl install --esp-path=/boot"')
     # Configure loader
-    with open(f"configs/sysdboot-eupnea.conf", "r") as conf:
+    with open("configs/sysdboot-eupnea.conf", "r") as conf:
         temp_conf = conf.read().replace("insert_partuuid", uuids[1])
-    with open(f"configs/sysdboot-eupnea.conf", "w") as conf:
+    with open("configs/sysdboot-eupnea.conf", "w") as conf:
         conf.write(temp_conf)
     cpfile("configs/sysdboot-eupnea.conf", "/mnt/eupneaos/boot/loader/entries/eupnea.conf")
     with open("/mnt/eupneaos/boot/loader/loader.conf", "w") as conf:
@@ -221,8 +210,8 @@ def relabel_files() -> None:
     open("/mnt/eupneaos/proc/self/mountinfo", "w").close()  # create empty /proc/self/mountinfo
 
     # copy /sys files needed for fixfiles
-   # mkdir("/mnt/eupneaos/sys/fs/selinux/initial_contexts/", create_parents=True)
-    #cpfile("configs/selinux/unlabeled", "/mnt/eupneaos/sys/fs/selinux/initial_contexts/unlabeled")
+    # mkdir("/mnt/eupneaos/sys/fs/selinux/initial_contexts/", create_parents=True)
+    # cpfile("configs/selinux/unlabeled", "/mnt/eupneaos/sys/fs/selinux/initial_contexts/unlabeled")
 
     # Backup original selinux
     cpfile("/mnt/eupneaos/usr/sbin/fixfiles", "/mnt/eupneaos/usr/sbin/fixfiles.bak")
