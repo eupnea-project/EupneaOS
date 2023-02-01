@@ -36,11 +36,9 @@ jobs:
       - name: Create temp directory
         run: mkdir /tmp/eupneaos-build/
 
-      - name: Downloading kernel, modules, headers
+      - name: Downloading kernel image
         run: |
           curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/download/dev-build/bzImage" -o /tmp/eupneaos-build/bzImage
-          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/download/dev-build/modules.tar.xz" -o /tmp/eupneaos-build/modules.tar.xz
-          curl -L "https://github.com/eupnea-linux/mainline-kernel/releases/download/dev-build/headers.tar.xz" -o /tmp/eupneaos-build/headers.tar.xz
 
       - name: Downloading fedora rootfs
         run: curl -L "https://github.com/eupnea-linux/fedora-rootfs/releases/latest/download/fedora-rootfs-37.tar.xz" -o /tmp/eupneaos-build/rootfs.tar.xz

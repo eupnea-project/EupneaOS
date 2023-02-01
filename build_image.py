@@ -111,17 +111,6 @@ def bootstrap_rootfs() -> None:
 
 
 def configure_rootfs() -> None:
-    # Extract kernel modules
-    print_status("Extracting kernel modules")
-    rmdir("/mnt/eupneaos/lib/modules")  # remove all old modules
-    mkdir("/mnt/eupneaos/lib/modules")
-    bash("tar xpf /tmp/eupneaos-build/modules.tar.xz -C /mnt/eupneaos/lib/modules/ --checkpoint=.10000")
-    print("")  # break line after tar
-
-    # Extract kernel headers
-    print_status("Extracting kernel headers")
-    extract_file("/tmp/eupneaos-build/headers.tar.xz", "/mnt/eupneaos//usr/src")
-
     # copy previously downloaded firmware
     print_status("Copying google firmware")
     cpdir("linux-firmware", "/mnt/eupneaos/lib/firmware")
@@ -146,6 +135,9 @@ def configure_rootfs() -> None:
 
     # Remove stock fedora kernel
     chroot("dnf remove kernel -y")
+
+    # Install eupnea kernel, modules and headers are installed automatically as dependencies
+    chroot("dnf install -y eupnea-mainline-kernel")
 
     # systemd-resolved.service needed to create /etc/resolv.conf link. Not enabled by default for some reason
     chroot("systemctl enable systemd-resolved")
