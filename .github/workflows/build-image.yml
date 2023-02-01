@@ -54,8 +54,8 @@ jobs:
       #          name: eupneaos.bin.rar
       #          path: ./eupneaos.bin.rar
 
-      #  - name: Splitting tar archive
-      #    run: split --verbose -b 1900MB eupneaos.bin.tar.xz eupneaos.split.
+      - name: Splitting tar archive
+        run: split --verbose -b 1900MB eupneaos.bin.tar.xz eupneaos.split.
 
       - name: Generating release message
         id: tag
@@ -79,13 +79,13 @@ jobs:
             This is a development build of EupneaOS. Highly unstable!
             
             1. Download all release files
-            ~~2. Combine files into tar: ``cat eupneaos.split.?? > eupneaos.bin.tar.xz``~~
+            2. Combine files into tar: ``cat eupneaos.split.?? > eupneaos.bin.tar.xz``
             3. Extract eupneaos.bin.tar.xz
             4. Verify checksum of the image: ``sha256sum -c --ignore-missing eupneaos.sha256``
             5. Flash eupneaos.bin to usb/sd-card
             
             Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
           files: |
-            eupneaos.bin.tar.xz
+          #  eupneaos.bin.tar.xz
             eupneaos.sha256
-          #  eupneaos.split.*
+            eupneaos.split.*
