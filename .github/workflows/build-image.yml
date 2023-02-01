@@ -86,6 +86,6 @@ jobs:
             
             Triggered by ${{ github.sha }} at ${{ github.event.repository.updated_at }}
           files: |
-          #  eupneaos.bin.tar.xz
             eupneaos.sha256
             eupneaos.split.*
+          #  eupneaos.bin.tar.xz
