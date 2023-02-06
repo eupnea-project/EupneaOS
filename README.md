@@ -1,5 +1,5 @@
 # EupneaOS
-A [Fedora](https://getfedora.org) based distro, optimized for Chromebooks.  
+A [Fedora](https://getfedora.org) based distro, optimized for 64-bit Chromebooks.  
 
 **EupneaOS is currently in alpha**
 
