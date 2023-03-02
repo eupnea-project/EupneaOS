@@ -127,7 +127,7 @@ def configure_rootfs() -> None:
     cpfile("configs/eupnea.json", "/mnt/eupneaos/etc/eupnea.json")
 
     print_status("Fixing sleep")
-    # disable hibernation aka S4 sleep, READ: https://eupnea-linux.github.io/main.html#/pages/bootlock
+    # disable hibernation aka S4 sleep, READ: https://eupnea-linux.github.io/docs/chromebook/bootlock
     # TODO: Fix S4 sleep
     mkdir("/mnt/eupneaos/etc/systemd/")  # just in case systemd path doesn't exist
     with open("/mnt/eupneaos/etc/systemd/sleep.conf", "a") as conf:
