@@ -1,4 +1,4 @@
-**EupneaOS is currently in alpha and SHOULD NOT BE USED**
+# **EupneaOS is currently in alpha and SHOULD NOT BE USED**
 
 # EupneaOS
 A [Fedora](https://getfedora.org) based distro, optimized for 64-bit Chromebooks.  
