@@ -375,7 +375,7 @@ def print_header(message: str) -> None:
 verbose = False
 # on import check if pv is installed and set global variable
 try:
-    bash("which pv")
+    bash("which pv > /dev/null 2>&1")  # suppress all output to avoid scaring the user (pv is not a hard dependency)
     no_extract_progress = False
 except subprocess.CalledProcessError:
     no_extract_progress = True
