@@ -24,8 +24,7 @@ jobs:
           fetch-depth: 1
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run Fedora Tool
-        run: |
-          docker exec fedora-container your_fedora_tool_command_here
+        run: bash build_rpm-ostree_repo.sh
