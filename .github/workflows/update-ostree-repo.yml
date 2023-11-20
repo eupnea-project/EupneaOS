@@ -1,0 +1,38 @@
+name: Updating ostree repository
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  update-ostree-repo:
+    runs-on: ubuntu-22.04
+    container:
+      image: fedora:latest
+      options: --name=fedora-container
+      volumes:
+        - /mnt/fedora-container:/mnt/rpm-ostree-repo
+    steps:
+      - name: Maximizing build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 5120
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+
+      - name: Checking out repository code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Fedora Tool
+        run: |
+          docker exec fedora-container your_fedora_tool_command_here
