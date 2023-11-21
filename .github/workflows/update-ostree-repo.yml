@@ -15,8 +15,6 @@ jobs:
     container:
       image: fedora:latest
       options: --name=fedora-container --cap-add CAP_SYS_ADMIN --privileged
-      volumes:
-        - ./:/mnt/rpm-ostree-repo
     steps:
       - name: Checking out repository code
         uses: actions/checkout@v3

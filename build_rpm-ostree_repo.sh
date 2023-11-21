@@ -7,15 +7,15 @@ mount -t proc proc /proc
 mount -t sysfs sys /sys
 
 # download the standard ostree configs
-git clone --branch="f39" --depth=1 https://pagure.io/workstation-ostree-config.git
+git clone --branch="f39" --depth=1 https://pagure.io/workstation-ostree-config.git /tmp/workstation-ostree-config
 
 # copy eupneaos config into cloned ostree configs
-cp ./configs/fedora-eupneaos.yaml ./workstation-ostree-config/fedora-eupneaos.yaml
+cp ./configs/fedora-eupneaos.yaml /tmp/workstation-ostree-config/workstation-ostree-config/fedora-eupneaos.yaml
 
 mkdir -p /tmp/ostree-cache
 
 # Initialize the OSTree repository
-ostree --repo=/mnt/rpm-ostree-repo init --mode=archive
+ostree --repo=./ init --mode=archive
 
 # build the ostree repo
-rpm-ostree compose tree --repo=/mnt/rpm-ostree-repo --cachedir=/tmp/ostree-cache ./workstation-ostree-config/fedora-eupneaos.yaml
+rpm-ostree compose tree --repo=./ --cachedir=/tmp/ostree-cache /tmp/workstation-ostree-config/fedora-eupneaos.yaml
