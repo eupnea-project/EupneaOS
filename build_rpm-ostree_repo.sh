@@ -10,7 +10,7 @@ mount -t sysfs sys /sys
 git clone --branch="f39" --depth=1 https://pagure.io/workstation-ostree-config.git /tmp/workstation-ostree-config
 
 # copy eupneaos config into cloned ostree configs
-cp ./configs/fedora-eupneaos.yaml /tmp/workstation-ostree-config/workstation-ostree-config/fedora-eupneaos.yaml
+cp ./configs/fedora-eupneaos.yaml /tmp/workstation-ostree-config/fedora-eupneaos.yaml
 
 mkdir -p /tmp/ostree-cache
 
