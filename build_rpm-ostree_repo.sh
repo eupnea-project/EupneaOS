@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dnf install -y ostree rpm-ostree
+dnf install -y ostree rpm-ostree git
 
 # download the standard ostree configs
 git clone --branch="f39" --depth=1 https://pagure.io/workstation-ostree-config.git
