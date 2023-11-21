@@ -16,7 +16,7 @@ jobs:
       image: fedora:latest
       options: --name=fedora-container --cap-add CAP_SYS_ADMIN --privileged
       volumes:
-        - /mnt/fedora-container:/mnt/rpm-ostree-repo
+        - ./:/mnt/rpm-ostree-repo
     steps:
       - name: Checking out repository code
         uses: actions/checkout@v3
@@ -26,5 +26,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Fedora Tool
+      - name: Build ostree repo
         run: bash build_rpm-ostree_repo.sh
+
+      - name: Pushing to ostree branch
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          # Disable setting repo owner as commit author
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+
+          # Optional. Commit message for the created commit.
+          # Defaults to "Apply automatic changes"
+          commit_message: Update ostree branch
+          branch: ostree-repo
+          create_branch: true
+          # Only include needed files
+          # file_pattern: './*'
+          # push_options: '--force'
+          
