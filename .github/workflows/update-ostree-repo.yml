@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: fedora:latest
-      options: --name=fedora-container
+      options: --name=fedora-container --cap-add CAP_SYS_ADMIN
       volumes:
         - /mnt/fedora-container:/mnt/rpm-ostree-repo
     steps:
