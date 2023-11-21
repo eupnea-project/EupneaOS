@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: fedora:latest
-      options: --name=fedora-container --cap-add CAP_SYS_ADMIN --security-opt apparmor=unconfined
+      options: --name=fedora-container --cap-add CAP_SYS_ADMIN --privileged
       volumes:
         - /mnt/fedora-container:/mnt/rpm-ostree-repo
     steps:
