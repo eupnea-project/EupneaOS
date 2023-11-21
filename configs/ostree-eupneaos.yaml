@@ -1,3 +1,5 @@
+fedora-eupneaos:
+  yaml:
 include: kde-desktop-pkgs.yaml
 ref: fedora/39/${basearch}/kinoite
 rojig:
