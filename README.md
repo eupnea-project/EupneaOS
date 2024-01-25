@@ -1,3 +1,10 @@
+# EUPNEAOS HAS BEEN DISCONTINUED
+
+Please use FyraLab's Ultramarine Linux: https://ultramarine-linux.org/
+
+<details>
+<summary>View the old readme</summary>
+
 # **EupneaOS is currently in alpha and SHOULD NOT BE USED**
 
 # EupneaOS
